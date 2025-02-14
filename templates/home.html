@@ -8,11 +8,11 @@
 <body>
     <h1>Available Courses</h1>
     <ul>
-        {% for class in classes %}
-            <li>{{ class.subject }} {{ class.course_number }} - {{ class.course_title }}</li>
+        {% for course in courses %}
+            <li>{{ course.subject }} {{ course.course_number }} - {{ course.course_title }}</li>
         {% empty %}
             <li>No courses available.</li>
         {% endfor %}
     </ul>
 </body>
-</htm
+</html>
