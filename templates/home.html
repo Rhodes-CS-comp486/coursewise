@@ -9,7 +9,10 @@
     <h1>Available Courses</h1>
     <ul>
         {% for course in courses %}
-            <li>{{ course.subject }} {{ course.course_number }} - {{ course.course_title }}</li>
+            <li>
+                {% url 'course_page' course.subject course.course_number as the_url %}
+                <a href="{{ the_url }}"> {{ course.subject }} {{ course.course_number }} </a>
+            </li>
         {% empty %}
             <li>No courses available.</li>
         {% endfor %}

@@ -23,3 +23,8 @@ class CourseInfo(models.Model):
 
     def _str_(self):
         return f"{self.subject} {self.course_number} - {self.course_title}"
+
+class CourseCatalog(models.Model):
+    subject = models.CharField(max_length=255)
+    course_number = models.CharField(max_length=255)
+    course_title = models.CharField(max_length=255)
