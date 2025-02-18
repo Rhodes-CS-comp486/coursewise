@@ -14,12 +14,12 @@ def course_page(request, subject, number):
 
     avg_class_size = offerings.aggregate(Avg("students_enrolled"))["students_enrolled__avg"] or 0
 
-    total_waitlist = offerings.aggregate(
-        total_waitlist=Sum(
-            (F('senior_requests') - F('seniors_enrolled')) +
-            (F('junior_requests') - F('juniors_enrolled')) +
-            (F('sophomore_requests') - F('sophomores_enrolled')) +
-            (F('first_year_requests') - F('first_years_enrolled'))))["total_waitlist"] or 0
+    #total_waitlist = offerings.aggregate(
+        #total_waitlist=Sum(
+           # (F('senior_requests') - F('seniors_enrolled')) +
+           # (F('junior_requests') - F('juniors_enrolled')) +
+           # (F('sophomore_requests') - F('sophomores_enrolled')) +
+            #(F('first_year_requests') - F('first_years_enrolled'))))["total_waitlist"] or 0
 
     zero = Value(0)
 
@@ -39,7 +39,7 @@ def course_page(request, subject, number):
     return render(request, 'course_page.html', {
         'offerings': unique_offerings,
         'avg_class_size': avg_class_size,
-        'total_waitlist': total_waitlist,
+        #'total_waitlist': total_waitlist,
         'has_waitlist': has_waitlist,
     })
 
