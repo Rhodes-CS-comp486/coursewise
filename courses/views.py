@@ -87,7 +87,7 @@ def instructor_history(request):
             'historical_courses': historical_courses
         })
 
-    return render(request, 'courses/instructor_history.html', {
+    return render(request, 'instructor_history.html', {
         'instructor_data': instructor_data
     })
 
