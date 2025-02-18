@@ -9,6 +9,15 @@
     <h1>Past Offerings</h1>
     
     <p><strong>Average Class Size:</strong> {{ avg_class_size|default:"No data available" }}</p>
+    
+    <p><strong>Total Waitlist Size:</strong> {{ total_waitlist }}</p>
+    <p><strong>Does this course typically have a waitlist?</strong> 
+        {% if has_waitlist %}
+            Yes
+        {% else %}
+            No
+        {% endif %}
+    </p>
 
     <ul>
         {% for offering in offerings %}
