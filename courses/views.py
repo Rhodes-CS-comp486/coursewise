@@ -2,9 +2,6 @@ from django.shortcuts import render
 from django.db.models import Sum, QuerySet, F, Avg, Value
 from courses.models import CourseInfo, CourseCatalog
 from django.db.models.functions import Greatest
-from django.shortcuts import render
-from django.db.models import Avg, Count
-from .models import CourseInfo
 
 
 def home(request):
