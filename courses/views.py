@@ -1,6 +1,7 @@
-from django.shortcuts import render
-from django.db.models import Count
+from django.shortcuts import render, get_object_or_404
+from django.db.models import Count, Avg
 from courses.models import CourseInfo, CourseCatalog
+
 
 def home(request):
     courses = CourseCatalog.objects.all()
@@ -9,4 +10,8 @@ def home(request):
 def course_page(request, subject, number):
     offerings = CourseInfo.objects.filter(subject=subject.upper(), course_number=int(number))
     unique_offerings = offerings.values('semester', 'year', 'instructor').distinct()
-    return render(request, 'course_page.html', {'offerings' : unique_offerings})
+
+    avg_class_size = offerings.aggregate(Avg("students_enrolled"))["students_enrolled__avg"] or 0
+    return render(request, 'course_page.html', {'offerings' : unique_offerings, 'avg_class_size' : avg_class_size})
+
+
