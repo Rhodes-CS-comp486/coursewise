@@ -5,6 +5,7 @@ from django.db.models.functions import Greatest
 from django.shortcuts import render
 from django.db.models import Avg, Count
 from .models import CourseInfo
+import datetime
 
 
 def home(request):
@@ -25,11 +26,13 @@ def course_page(request, subject, number):
 
 def instructor_history(request):
     # Get current semester info (you may want to adjust this logic)
-    current_year = "2024"  # or get dynamically
-    current_semester = "Spring"  # or get dynamically
+    current_date = datetime.date.today()
+    current_year = "2023"  # or get dynamically
+    current_semester = "Spring"
 
     # Get all unique instructors
     instructors = CourseInfo.objects.values_list('instructor', flat=True).distinct()
+    print(f"Instructors: {instructors}")
 
     instructor_data = []
 
@@ -40,6 +43,8 @@ def instructor_history(request):
             year=current_year,
             semester=current_semester
         ).values('subject', 'course_number', 'course_title')
+
+        # print(f"Current courses for {instructor}: {current_courses}") #debug
 
         # Format current courses for display
         current_course_list = [
@@ -64,11 +69,16 @@ def instructor_history(request):
                 avg_enrollment=Avg('students_enrolled')
             )['avg_enrollment']
 
+            # print(f"Avg class size for {course_code}: {avg_size}")
+
             # Calculate enrollment demand
             demand_level = _calculate_demand_level(history)
 
+            # print(f"Demand level for {course_code}: {demand_level}")
+
             # Determine typical schedule
             schedule = _determine_schedule(history)
+            # print(f"Schedule for {course_code}: {schedule}")
 
             # Format semester list
             semesters = [f"{h.semester} {h.year}" for h in history]
@@ -86,6 +96,8 @@ def instructor_history(request):
             'current_courses': current_course_list,
             'historical_courses': historical_courses
         })
+
+    #print(f"Instructor Data: {instructor_data}")
 
     return render(request, 'instructor_history.html', {
         'instructor_data': instructor_data
