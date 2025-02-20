@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    
+<div class="container mx-auto p-4">
+    <h1 class="text-2xl font-bold mb-6">Course Instructor History</h1>
+
+    {% for instructor in instructor_data %}
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">{{ instructor.name }}</h2>
+        
+
+            <div class="mb-4">
+                <h3 class="text-lg font-medium mb-2">Current Courses:</h3>
+                <div class="flex flex-wrap gap-2">
+                    {% for course in instructor.current_courses %}
+                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                            {{ course }}
+                        </span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full border">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="px-4 py-2 text-left border">Course</th>
+                            <th class="px-4 py-2 text-left border">Previous Semesters</th>
+                            <th class="px-4 py-2 text-left border">Avg Class Size</th>
+                            <th class="px-4 py-2 text-left border">Enrollment Demand</th>
+                            <th class="px-4 py-2 text-left border">Typical Schedule</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for course, history in instructor.historical_courses.items %}
+                            <tr class="border">
+                                <td class="px-4 py-2 border">
+                                    <div class="font-medium">{{ course }}</div>
+                                    <div class="text-sm text-gray-600">{{ history.course_title }}</div>
+                                </td>
+                                <td class="px-4 py-2 border">{{ history.semesters|join:", " }}</td>
+                                <td class="px-4 py-2 border">{{ history.avg_class_size }} students</td>
+                                <td class="px-4 py-2 border">
+                                    <span class="px-2 py-1 rounded-full text-sm
+                                        {% if history.enrollment_demand == 'High' %}
+                                            bg-red-100 text-red-800
+                                        {% elif history.enrollment_demand == 'Medium' %}
+                                            bg-yellow-100 text-yellow-800
+                                        {% else %}
+                                            bg-green-100 text-green-800
+                                        {% endif %}">
+                                        {{ history.enrollment_demand }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-2 border">{{ history.typical_schedule }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

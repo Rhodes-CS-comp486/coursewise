@@ -10,8 +10,12 @@
     <h2>Your Selections:</h2>
     <p><strong>Major:</strong> {{ major }}</p>
     <p><strong>Year:</strong> {{ year }}</p>
-     
-     
+
+
+    <br>
+    <a href="{% url 'instructor_history' %}">
+        <button>Go to Instructor History</button>
+    </a>
     <h1>Available Courses</h1>
     <ul>
         {% for course in courses %}
