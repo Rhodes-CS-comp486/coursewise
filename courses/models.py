@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Avg
 
 # Create your models here.
 class CourseInfo(models.Model):
@@ -20,3 +21,13 @@ class CourseInfo(models.Model):
     sophomores_enrolled = models.IntegerField()
     first_year_requests = models.IntegerField()
     first_years_enrolled = models.IntegerField()
+
+    def _str_(self):
+        return f"{self.subject} {self.course_number} - {self.course_title}"
+
+class CourseCatalog(models.Model):
+    subject = models.CharField(max_length=255)
+    course_number = models.CharField(max_length=255)
+    course_title = models.CharField(max_length=255)
+
+

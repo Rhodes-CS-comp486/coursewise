@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course List</title>
+</head>
+<body>
+    <h1>Past Offerings</h1>
+    
+    <p><strong>Average Class Size:</strong> {{ avg_class_size|default:"No data available" }}</p>
+
+    <ul>
+        {% for offering in offerings %}
+            <li>{{ offering.semester }} {{ offering.year }} - {{ offering.instructor }} ( Max Enrollment: {{ offering.max_enrollment }}, Actually Enrolled: {{ offering.students_enrolled }})</li>
+        {% empty %}
+            <li>No past offerings.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
