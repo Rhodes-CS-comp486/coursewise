@@ -1,6 +1,7 @@
+from django.http import Http404
 from django.shortcuts import render, redirect
 from django.db.models import Sum, QuerySet, F, Avg, Value
-from courses.models import CourseInfo, CourseCatalog
+from courses.models import CourseInfo, CourseCatalog, CourseInfoEXT
 from django.db.models.functions import Greatest
 from django.shortcuts import render
 from django.db.models import Avg, Count
@@ -168,6 +169,39 @@ def _determine_schedule(course_history):
         return "Spring only"
     else:
         return "Varies"
+
+def demand_prediction(request, subject, course_number):
+    # Start with an initial value
+    initial_value = 10
+    semester_filter = request.GET.get('semester', None)  # Optional, defaults to None
+    f_credits_filter = request.GET.get('f_credits', None)  # Optional, defaults to None
+    capacity_filter = request.GET.get('capacity', None)  # Optional, defaults to None
+
+    # Build the initial query filtering by subject and course_number
+    query_filter = {
+        'subject': subject,
+        'course_number': course_number,
+    }
+
+    # Add optional filters to the query if they are provided
+    if semester_filter:
+        query_filter['semester'] = semester_filter
+    if f_credits_filter:
+        query_filter['f_credits'] = f_credits_filter
+    if capacity_filter:
+        query_filter['capacity'] = capacity_filter
+
+    # Query the CourseInfoEXT model using the dynamic query_filter
+    course_info_ext = CourseInfoEXT.objects.filter(**query_filter)
+
+    if not course_info_ext:
+        raise Http404("Course not found in extended info.")
+
+
+    for course_info in course_info_ext:
+
+
+
 
 
 
