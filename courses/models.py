@@ -22,6 +22,8 @@ class CourseInfo(models.Model):
     first_year_requests = models.IntegerField()
     first_years_enrolled = models.IntegerField()
 
+class Course(models.Model):
+
     def _str_(self):
         return f"{self.subject} {self.course_number} - {self.course_title}"
 
