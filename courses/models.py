@@ -22,6 +22,18 @@ class CourseInfo(models.Model):
     first_year_requests = models.IntegerField()
     first_years_enrolled = models.IntegerField()
 
+# Create your models here.
+class CourseInfoEXT(models.Model):
+    semester = models.CharField(max_length=255)
+    subject = models.CharField(max_length=255)
+    course_number = models.IntegerField()
+    instructor = models.CharField(max_length=255)
+    f_credits = models.IntegerField()
+    major_minor = models.IntegerField()
+    capacity = models.IntegerField()
+    total_enrollment = models.IntegerField()
+    demand = models.IntegerField()
+
 class Course(models.Model):
 
     def _str_(self):
