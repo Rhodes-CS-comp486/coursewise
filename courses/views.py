@@ -177,7 +177,7 @@ def _determine_schedule(course_history):
     else:
         return "Varies"
 
-def demand_prediction(request, subject, course_number, instructor):
+def demand_prediction(request, subject, course_number):
     # Start with an initial value
     initial_value = 10
     semester_filter = request.GET.get('semester', None)  # Optional, defaults to None
@@ -189,7 +189,7 @@ def demand_prediction(request, subject, course_number, instructor):
     query_filter = {
         'subject': subject,
         'course_number': course_number,
-        'instructor' : instructor,
+        #'instructor' : instructor,
     }
 
     # Add optional filters to the query if they are provided
@@ -201,28 +201,25 @@ def demand_prediction(request, subject, course_number, instructor):
         query_filter['capacity'] = capacity_filter
 
     # Query the CourseInfoEXT model using the dynamic query_filter
-    course_info_ext = CourseInfoEXT.objects.filter(**query_filter).first()
+    course_info_ext = CourseInfoEXT.objects.filter(**query_filter)
 
     if not course_info_ext:
         raise Http404("Course not found in extended info.")
 
     avg_f_credits = course_info_ext.aggregate(Avg('f_credits'))['f_credits__avg']
     avg_major_minor = course_info_ext.aggregate(Avg('major_minor'))['major_minor__avg']
-    avg_demand = course_info_ext.aggregate(Avg('demand'))['demand__avg']
+    #avg_demand = course_info_ext.aggregate(Avg('demand'))['demand__avg']
 
     initial_value -= avg_f_credits
     initial_value -= avg_major_minor
 
-    try:
-        course_info = CourseInfo.objects.get(subject=subject, course_number=course_number)
-    except CourseInfo.DoesNotExist:
-        raise Http404("Course not found in extended info.")
+    course_info = CourseInfo.objects.filter(subject=subject, course_number=course_number)
 
     total_enrollment_demand = 0
     total_course = course_info.count()
 
 
-    for course in total_course:
+    for course in course_info:
 
         if student_year == "First-Year":
             enrollment_demand = course_info.first_year_requests - course_info.first_years_enrolled
