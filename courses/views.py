@@ -1,3 +1,5 @@
+from collections import Counter
+
 from django.http import Http404
 from django.shortcuts import render, redirect
 from django.db.models import Sum, QuerySet, F, Avg, Value
@@ -5,7 +7,7 @@ from courses.models import CourseInfo, CourseCatalog, CourseInfoEXT
 from django.db.models.functions import Greatest
 from django.shortcuts import render
 from django.db.models import Avg, Count
-from .models import CourseInfo
+from .models import CourseInfo, CourseInfoEXT
 import datetime
 
 
@@ -23,10 +25,15 @@ def course_page(request, subject, number):
 
     avg_class_size = int(offerings.aggregate(Avg("students_enrolled"))["students_enrolled__avg"]) or 0
 
+    demand_data = demand_prediction(request, subject, number)
+
 
     return render(request, 'course_page.html', {
         'offerings': unique_offerings,
         'avg_class_size': avg_class_size,
+        'classification': demand_data["classification"],
+        'final_score': demand_data["final_score"],
+        'demand_level': demand_data["demand_level"],
     })
 def startup(request):
     # Check if the form was submitted via POST
@@ -170,17 +177,19 @@ def _determine_schedule(course_history):
     else:
         return "Varies"
 
-def demand_prediction(request, subject, course_number):
+def demand_prediction(request, subject, course_number, instructor):
     # Start with an initial value
     initial_value = 10
     semester_filter = request.GET.get('semester', None)  # Optional, defaults to None
     f_credits_filter = request.GET.get('f_credits', None)  # Optional, defaults to None
     capacity_filter = request.GET.get('capacity', None)  # Optional, defaults to None
+    student_year = request.session.get('year', None)
 
     # Build the initial query filtering by subject and course_number
     query_filter = {
         'subject': subject,
         'course_number': course_number,
+        'instructor' : instructor,
     }
 
     # Add optional filters to the query if they are provided
@@ -192,13 +201,73 @@ def demand_prediction(request, subject, course_number):
         query_filter['capacity'] = capacity_filter
 
     # Query the CourseInfoEXT model using the dynamic query_filter
-    course_info_ext = CourseInfoEXT.objects.filter(**query_filter)
+    course_info_ext = CourseInfoEXT.objects.filter(**query_filter).first()
 
     if not course_info_ext:
         raise Http404("Course not found in extended info.")
 
+    avg_f_credits = course_info_ext.aggregate(Avg('f_credits'))['f_credits__avg']
+    avg_major_minor = course_info_ext.aggregate(Avg('major_minor'))['major_minor__avg']
+    avg_demand = course_info_ext.aggregate(Avg('demand'))['demand__avg']
 
-    for course_info in course_info_ext:
+    initial_value -= avg_f_credits
+    initial_value -= avg_major_minor
+
+    try:
+        course_info = CourseInfo.objects.get(subject=subject, course_number=course_number)
+    except CourseInfo.DoesNotExist:
+        raise Http404("Course not found in extended info.")
+
+    total_enrollment_demand = 0
+    total_course = course_info.count()
+
+
+    for course in total_course:
+
+        if student_year == "First-Year":
+            enrollment_demand = course_info.first_year_requests - course_info.first_years_enrolled
+        elif student_year == "Sophomore":
+            enrollment_demand = course_info.sophomore_requests - course_info.sophomores_enrolled
+        elif student_year == "Junior":
+            enrollment_demand = course_info.junior_requests - course_info.juniors_enrolled
+        elif student_year == "Senior":
+            enrollment_demand = course_info.senior_requests - course_info.seniors_enrolled
+        else:
+            return render(request, "error.html", {"message": "Invalid student year."})
+
+        if enrollment_demand < 0:
+            enrollment_demand = 0
+
+        total_enrollment_demand += enrollment_demand
+
+    avg_enrollment_demand = total_enrollment_demand / total_course
+
+    if avg_enrollment_demand >=5:
+        initial_value -= enrollment_demand // 5 # sub 1 for every 5 extra requests
+
+    demand_list = [course_info_ext.demand for course_info_ext in course_info_ext]
+    demand_counter = Counter(demand_list)
+    most_common_demand, _ = demand_counter.most_common(1)[0]
+
+    if most_common_demand == "high":
+        initial_value -= 5
+    elif most_common_demand == "low":
+        initial_value += 5
+
+    if initial_value >= 7:
+        classification = "High"
+    elif 4 <= initial_value <= 6:
+        classification = "Medium"
+    else:
+        classification = "Low"
+
+    return {
+        "classification": classification,
+        "final_score": initial_value,
+        "demand_level": most_common_demand,
+    }
+
+
 
 
 

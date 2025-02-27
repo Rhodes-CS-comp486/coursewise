@@ -17,5 +17,14 @@
             <li>No past offerings.</li>
         {% endfor %}
     </ul>
+
+    {% if classification %}
+        <h2>Demand Prediction</h2>
+        <p><strong>Demand Level:</strong> {{ demand_level }}</p>
+        <p><strong>Final Score:</strong> {{ final_score }}</p>
+        <p><strong>Classification:</strong> {{ classification }}</p>
+    {% else %}
+        <p>No demand prediction available.</p>
+    {% endif %}
 </body>
 </html>

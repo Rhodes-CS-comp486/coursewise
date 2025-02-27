@@ -32,7 +32,10 @@ class CourseInfoEXT(models.Model):
     major_minor = models.IntegerField()
     capacity = models.IntegerField()
     total_enrollment = models.IntegerField()
-    demand = models.IntegerField()
+    demand = models.CharField(max_length=255)
+
+    class Meta:
+        db_table = 'courses_courseinfoext'
 
 class Course(models.Model):
 
