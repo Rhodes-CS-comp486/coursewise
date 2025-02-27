@@ -14,7 +14,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-
+"""""
 from django.urls import path
 from . import views
 
@@ -23,4 +23,16 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('<str:subject>/<str:number>/', views.course_page, name='course_page'),
     path('instructor-history/', views.instructor_history, name='instructor_history'),
+
+    path('hist_pattern/', views.hist_pattern, name='hist_pattern'),
+]
+
+"""
+
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('', views.historical_pattern_analysis, name='home'),  # Use historical_pattern_analysis as the home page
+    path('historical-patterns/', views.historical_pattern_analysis, name='historical_patterns'),  # Additional URL for the same view
 ]

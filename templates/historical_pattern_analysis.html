@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto p-4">
+    <h1 class="text-2xl font-bold mb-6">Historical Enrollment Pattern Analysis</h1>
+    
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-lg font-semibold mb-2">Average Fill Rate</h2>
+            <p class="text-3xl font-bold text-blue-600" id="avg-fill-rate">Loading...</p>
+            <p class="text-sm text-gray-500">Percentage of available seats filled</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-lg font-semibold mb-2">Typical Waitlist</h2>
+            <p class="text-3xl font-bold text-blue-600" id="avg-waitlist">Loading...</p>
+            <p class="text-sm text-gray-500">Average students waitlisted per course</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-lg font-semibold mb-2">Enrollment Speed</h2>
+            <p class="text-3xl font-bold text-blue-600" id="avg-speed">Loading...</p>
+            <p class="text-sm text-gray-500">Higher values indicate faster filling courses</p>
+        </div>
+    </div>
+    
+    <!-- Enrollment Trends Chart -->
+    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+        <h2 class="text-lg font-semibold mb-4">Enrollment Trends (Past 2 Years)</h2>
+        <div class="h-64">
+            <canvas id="enrollmentTrendsChart"></canvas>
+        </div>
+    </div>
+    
+    <!-- Fill Rates Chart -->
+    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+        <h2 class="text-lg font-semibold mb-4">Fill Rates by Semester</h2>
+        <div class="h-64">
+            <canvas id="fillRatesChart"></canvas>
+        </div>
+    </div>
+    
+    <!-- Waitlist Chart -->
+    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+        <h2 class="text-lg font-semibold mb-4">Typical Waitlist Lengths</h2>
+        <div class="h-64">
+            <canvas id="waitlistChart"></canvas>
+        </div>
+    </div>
+    
+    <!-- Enrollment Speed Chart -->
+    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+        <h2 class="text-lg font-semibold mb-4">Course Enrollment Speed</h2>
+        <div class="h-64">
+            <canvas id="speedChart"></canvas>
+        </div>
+        <p class="text-sm text-gray-500 mt-2">Higher values indicate courses that fill up more quickly</p>
+    </div>
+    
+    <!-- High Demand Courses -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-lg font-semibold mb-4">Highest Demand Courses</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead>
+                    <tr class="bg-gray-50">
+                        <th class="px-4 py-2 text-left">Course</th>
+                        <th class="px-4 py-2 text-left">Instructor</th>
+                        <th class="px-4 py-2 text-left">Fill Rate</th>
+                        <th class="px-4 py-2 text-left">Semester</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for course in high_demand_courses %}
+                    <tr class="border-t">
+                        <td class="px-4 py-2">{{ course.subject }} {{ course.course_number }}: {{ course.course_title }}</td>
+                        <td class="px-4 py-2">{{ course.instructor }}</td>
+                        <td class="px-4 py-2">
+                            <div class="bg-gray-200 rounded-full h-4 w-32 overflow-hidden">
+                                {% with fill_rate=course.demand_ratio %}
+                                <div class="h-full 
+                                    {% if fill_rate > 90 %}bg-red-500
+                                    {% elif fill_rate > 70 %}bg-yellow-500
+                                    {% else %}bg-green-500{% endif %}"
+                                    style="width: {{ fill_rate }}%"></div>
+                                {% endwith %}
+                            </div>
+                            <span class="text-sm">{{ course.demand_ratio|floatformat:1 }}%</span>
+                        </td>
+                        <td class="px-4 py-2">{{ course.semester }} {{ course.year }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js for graphs -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Parse the enrollment data from Django
+    const enrollmentData = JSON.parse('{{ enrollment_data|safe }}');
+    
+    // Set the average values for the summary cards
+    document.getElementById('avg-fill-rate').textContent = 
+        (enrollmentData.fill_rates.reduce((a, b) => a + b, 0) / enrollmentData.fill_rates.length).toFixed(1) + '%';
+    document.getElementById('avg-waitlist').textContent = 
+        (enrollmentData.waitlist_data.reduce((a, b) => a + b, 0) / enrollmentData.waitlist_data.length).toFixed(1);
+    document.getElementById('avg-speed').textContent = 
+        (enrollmentData.enrollment_speed.reduce((a, b) => a + b, 0) / enrollmentData.enrollment_speed.length).toFixed(1);
+    
+    // Fill Rate Chart
+    const fillRatesCtx = document.getElementById('fillRatesChart').getContext('2d');
+    new Chart(fillRatesCtx, {
+        type: 'bar',
+        data: {
+            labels: enrollmentData.semesters,
+            datasets: [{
+                label: 'Fill Rate (%)',
+                data: enrollmentData.fill_rates,
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            },
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+    
+    // Waitlist Chart
+    const waitlistCtx = document.getElementById('waitlistChart').getContext('2d');
+    new Chart(waitlistCtx, {
+        type: 'bar',
+        data: {
+            labels: enrollmentData.semesters,
+            datasets: [{
+                label: 'Average Waitlist Length',
+                data: enrollmentData.waitlist_data,
+                backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+    
+    // Enrollment Speed Chart
+    const speedCtx = document.getElementById('speedChart').getContext('2d');
+    new Chart(speedCtx, {
+        type: 'line',
+        data: {
+            labels: enrollmentData.semesters,
+            datasets: [{
+                label: 'Enrollment Speed',
+                data: enrollmentData.enrollment_speed,
+                backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2,
+                tension: 0.1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            },
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+    
+    // Combined Chart for Enrollment Trends
+    const trendsCtx = document.getElementById('enrollmentTrendsChart').getContext('2d');
+    new Chart(trendsCtx, {
+        type: 'line',
+        data: {
+            labels: enrollmentData.semesters,
+            datasets: [
+                {
+                    label: 'Fill Rate (%)',
+                    data: enrollmentData.fill_rates,
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                    borderWidth: 2,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Waitlist Length',
+                    data: enrollmentData.waitlist_data,
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                    borderWidth: 2,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Fill Rate (%)'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Waitlist Length'
+                    },
+                    grid: {
+                        drawOnChartArea: false
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
