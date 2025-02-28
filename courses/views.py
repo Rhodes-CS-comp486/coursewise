@@ -12,9 +12,16 @@ import datetime
 
 
 def home(request):
-    # Get the user's selected major and year from the session
     major = request.session.get('major', 'Not selected')
     year = request.session.get('year', 'Not selected')
+
+    if request.method == 'POST':
+    # Get the user's selected major and year from the session
+        major = request.session.get('major', 'Not selected')
+        year = request.session.get('year', 'Not selected')
+
+        request.session['major'] = major
+        request.session['year'] = year
 
     courses = CourseCatalog.objects.all()
     return render(request, 'home.html', {'major': major, 'year': year, 'courses': courses})
@@ -221,16 +228,16 @@ def demand_prediction(request, subject, course_number):
 
     for course in course_info:
 
-        if student_year == "First-Year":
-            enrollment_demand = course_info.first_year_requests - course_info.first_years_enrolled
+        if student_year == "Freshman":
+            enrollment_demand = course.first_year_requests - course.first_years_enrolled
         elif student_year == "Sophomore":
-            enrollment_demand = course_info.sophomore_requests - course_info.sophomores_enrolled
+            enrollment_demand = course.sophomore_requests - course.sophomores_enrolled
         elif student_year == "Junior":
-            enrollment_demand = course_info.junior_requests - course_info.juniors_enrolled
+            enrollment_demand = course.junior_requests - course.juniors_enrolled
         elif student_year == "Senior":
-            enrollment_demand = course_info.senior_requests - course_info.seniors_enrolled
+            enrollment_demand = course.senior_requests - course.seniors_enrolled
         else:
-            return render(request, "error.html", {"message": "Invalid student year."})
+            return HttpResponse("Invalid student year.", status=400)
 
         if enrollment_demand < 0:
             enrollment_demand = 0
