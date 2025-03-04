@@ -17,5 +17,17 @@
             <li>No past offerings.</li>
         {% endfor %}
     </ul>
+
+    {% if classification %}
+        <h2>Demand Prediction</h2>
+        <p><strong>Demand Level:</strong> {{ demand_level }}</p>
+        <p><strong>Likelihood of Enrollment :</strong>  
+        <span style="{% if classification == 'High' %}color: green;{% elif classification == 'Medium' %}color: yellow;{% elif classification == 'Low' %}color: red;{% else %}color: gray;{% endif %}">
+        {{ classification }}
+    </span>
+</p>
+    {% else %}
+        <p>No demand prediction available.</p>
+    {% endif %}
 </body>
 </html>
