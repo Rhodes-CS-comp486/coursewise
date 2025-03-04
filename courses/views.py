@@ -76,7 +76,7 @@ def historical_pattern_analysis(request):
         )
     ).order_by('-demand_ratio')[:5]
 
-    return render(request, 'courses/historical_pattern_analysis.html', {
+    return render(request, 'historical_pattern_analysis.html', {
         'enrollment_data': enrollment_json,
         'high_demand_courses': high_demand_courses,
     })
