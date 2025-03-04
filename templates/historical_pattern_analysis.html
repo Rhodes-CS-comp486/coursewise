@@ -145,7 +145,83 @@
     // Parse the enrollment data from Django
     const enrollmentData = JSON.parse('{{ enrollment_data|safe }}');
     
- 
+    // Calculate averages for summary cards
+    const avgFillRate = (enrollmentData.fill_rates.reduce((a, b) => a + b, 0) / enrollmentData.fill_rates.length).toFixed(1);
+    const avgWaitlist = (enrollmentData.waitlist_data.reduce((a, b) => a + b, 0) / enrollmentData.waitlist_data.length).toFixed(1);
+    const avgSpeed = (enrollmentData.enrollment_speed.reduce((a, b) => a + b, 0) / enrollmentData.enrollment_speed.length).toFixed(1);
+    
+    // Set the average values for the summary cards
+    document.getElementById('avg-fill-rate').textContent = avgFillRate + '%';
+    document.getElementById('avg-waitlist').textContent = avgWaitlist;
+    document.getElementById('avg-speed').textContent = avgSpeed;
+    
+    // Update visual indicators
+    // Fill rate progress bar
+    const fillRateBar = document.getElementById('fill-rate-bar');
+    fillRateBar.style.width = avgFillRate + '%';
+    if (avgFillRate > 90) {
+        fillRateBar.classList.add('bg-red-500');
+        fillRateBar.classList.remove('bg-blue-500', 'bg-yellow-500', 'bg-green-500');
+    } else if (avgFillRate > 75) {
+        fillRateBar.classList.add('bg-yellow-500');
+        fillRateBar.classList.remove('bg-blue-500', 'bg-red-500', 'bg-green-500');
+    } else {
+        fillRateBar.classList.add('bg-green-500');
+        fillRateBar.classList.remove('bg-blue-500', 'bg-yellow-500', 'bg-red-500');
+    }
+    
+    // Waitlist indicator
+    const waitlistIndicator = document.getElementById('waitlist-indicator');
+    if (avgWaitlist > 10) {
+        waitlistIndicator.textContent = 'High';
+        waitlistIndicator.classList.add('bg-red-100', 'text-red-800');
+    } else if (avgWaitlist > 5) {
+        waitlistIndicator.textContent = 'Medium';
+        waitlistIndicator.classList.add('bg-yellow-100', 'text-yellow-800');
+    } else {
+        waitlistIndicator.textContent = 'Low';
+        waitlistIndicator.classList.add('bg-green-100', 'text-green-800');
+    }
+    
+    // Speed meter
+    const speedMeter = document.getElementById('speed-meter');
+    speedMeter.style.width = avgSpeed + '%';
+    if (avgSpeed > 75) {
+        speedMeter.classList.add('bg-red-500');
+        document.getElementById('avg-speed').classList.add('text-red-600');
+        document.getElementById('avg-speed').classList.remove('text-blue-600');
+    } else if (avgSpeed > 50) {
+        speedMeter.classList.add('bg-yellow-500');
+        document.getElementById('avg-speed').classList.add('text-yellow-600');
+        document.getElementById('avg-speed').classList.remove('text-blue-600');
+    } else {
+        speedMeter.classList.add('bg-green-500');
+        document.getElementById('avg-speed').classList.add('text-green-600');
+        document.getElementById('avg-speed').classList.remove('text-blue-600');
+    }
+    
+    // Add context information above charts
+    const trendsContainer = document.querySelector('#enrollmentTrendsChart').parentNode.parentNode;
+    const contextDiv = document.createElement('div');
+    contextDiv.className = 'mb-4 p-3 bg-blue-50 rounded-lg text-sm';
+    
+    // Compare current semester to previous
+    const currentFillRate = enrollmentData.fill_rates[enrollmentData.fill_rates.length - 1];
+    const previousFillRate = enrollmentData.fill_rates[enrollmentData.fill_rates.length - 2];
+    const fillRateTrend = currentFillRate > previousFillRate ? 'increased' : 'decreased';
+    const fillRateDiff = Math.abs(currentFillRate - previousFillRate).toFixed(1);
+    
+    contextDiv.innerHTML = `
+        <p class="font-medium">Analysis:</p>
+        <ul class="list-disc ml-5 mt-1 space-y-1">
+            <li>Fill rates have ${fillRateTrend} by ${fillRateDiff}% compared to the previous semester</li>
+            <li>Courses are currently filling at a ${avgSpeed > 75 ? 'rapid' : avgSpeed > 50 ? 'moderate' : 'steady'} pace</li>
+            <li>Average waitlist length is ${avgWaitlist > 10 ? 'higher than usual' : avgWaitlist > 5 ? 'at a typical level' : 'lower than usual'}</li>
+        </ul>
+    `;
+    
+    trendsContainer.insertBefore(contextDiv, trendsContainer.firstChild);
+    
     // Fill Rate Chart
     const fillRatesCtx = document.getElementById('fillRatesChart').getContext('2d');
     new Chart(fillRatesCtx, {
@@ -164,11 +240,31 @@
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: 100
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Fill Rate (%)'
+                    }
                 }
             },
             responsive: true,
-            maintainAspectRatio: false
+            maintainAspectRatio: false,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Fill Rate: ${context.raw}% of seats filled`;
+                        },
+                        afterLabel: function(context) {
+                            const value = context.raw;
+                            if (value > 90) return 'Very high demand';
+                            if (value > 75) return 'High demand';
+                            if (value > 50) return 'Moderate demand';
+                            return 'Low demand';
+                        }
+                    }
+                }
+            }
         }
     });
     
@@ -189,11 +285,30 @@
         options: {
             scales: {
                 y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Students'
+                    }
                 }
             },
             responsive: true,
-            maintainAspectRatio: false
+            maintainAspectRatio: false,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Waitlist: ${context.raw} students per course`;
+                        },
+                        afterLabel: function(context) {
+                            const value = context.raw;
+                            if (value > 10) return 'High demand - difficult to get in';
+                            if (value > 5) return 'Moderate demand - may require waitlisting';
+                            return 'Low demand - usually accessible';
+                        }
+                    }
+                }
+            }
         }
     });
     
@@ -216,11 +331,30 @@
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: 100
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Speed (0-100)'
+                    }
                 }
             },
             responsive: true,
-            maintainAspectRatio: false
+            maintainAspectRatio: false,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Speed: ${context.raw}/100`;
+                        },
+                        afterLabel: function(context) {
+                            const value = context.raw;
+                            if (value > 75) return 'Fills very quickly - register early';
+                            if (value > 50) return 'Moderate speed - plan accordingly';
+                            return 'Fills gradually - less urgency';
+                        }
+                    }
+                }
+            }
         }
     });
     
@@ -275,6 +409,21 @@
                     },
                     grid: {
                         drawOnChartArea: false
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const datasetLabel = context.dataset.label;
+                            const value = context.raw;
+                            if (datasetLabel === 'Fill Rate (%)') {
+                                return `Fill Rate: ${value}%`;
+                            } else {
+                                return `Waitlist: ${value} students`;
+                            }
+                        }
                     }
                 }
             }
