@@ -1,33 +1,86 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Course List</title>
-</head>
-<body>
-    <h1>Past Offerings</h1>
-    
-    <p><strong>Average Class Size:</strong> {{ avg_class_size|default:"No data available" }}</p>
+{% extends "base.html" %}
 
-    <ul>
-        {% for offering in offerings %}
-            <li>{{ offering.semester }} {{ offering.year }} - {{ offering.instructor }} ( Max Enrollment: {{ offering.max_enrollment }}, Actually Enrolled: {{ offering.students_enrolled }})</li>
-        {% empty %}
-            <li>No past offerings.</li>
-        {% endfor %}
-    </ul>
+{% block content %}
+    <div class="container mx-auto px-4 py-6">
+        <h1 class="text-3xl font-semibold text-gray-800 mb-6">Past Offerings</h1>
+        
+        <!-- Average Class Size Section -->
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <p class="text-lg font-medium text-gray-700">
+                <strong>Average Class Size:</strong> 
+                <span class="text-gray-500">{{ avg_class_size|default:"No data available" }}</span>
+            </p>
+        </div>
 
-    {% if classification %}
-        <h2>Demand Prediction</h2>
-        <p><strong>Demand Level:</strong> {{ demand_level }}</p>
-        <p><strong>Likelihood of Enrollment :</strong>  
-        <span style="{% if classification == 'High' %}color: green;{% elif classification == 'Medium' %}color: yellow;{% elif classification == 'Low' %}color: red;{% else %}color: gray;{% endif %}">
-        {{ classification }}
-    </span>
-</p>
-    {% else %}
-        <p>No demand prediction available.</p>
-    {% endif %}
-</body>
-</html>
+        <!-- List of Offerings -->
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Past Offerings</h2>
+            <ul class="list-disc pl-6 space-y-3">
+                {% for offering in offerings %}
+                    <li class="text-gray-700">
+                        <strong>{{ offering.semester }} {{ offering.year }}</strong> - {{ offering.instructor }} 
+                        <span class="text-gray-500"> 
+                            (Max Enrollment: <span class="text-blue-500">{{ offering.max_enrollment }}</span>, 
+                            Actually Enrolled: <span class="text-blue-500">{{ offering.students_enrolled }}</span>)
+                        </span>
+                    </li>
+                {% empty %}
+                    <li class="text-gray-500">No past offerings.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Demand Prediction Section -->
+        {% if classification %}
+            <div class="bg-white shadow-md rounded-lg p-6 mt-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Demand Prediction</h2>
+                <div class="mb-4">
+                    <p class="text-lg font-medium text-gray-700">
+                        <strong>Demand Level:</strong> 
+                        <span class="font-bold text-blue-600">{{ demand_level }}</span>
+                    </p>
+                    <p class="text-lg font-medium text-gray-700">
+                        <strong>Likelihood of Enrollment:</strong>  
+                        <span 
+                            class="font-bold {% if classification == 'High' %}text-green-500{% elif classification == 'Medium' %}text-yellow-500{% else %}text-red-500{% endif %}">
+                            {{ classification }}
+                        </span>
+                    </p>
+                </div>
+
+                <!-- Factors Table -->
+                <h3 class="text-lg font-semibold text-gray-800 mt-6 mb-4">The following factors may be affecting your demand prediction:</h3>
+                <div class="overflow-x-auto bg-gray-50 shadow-md rounded-lg">
+                    <table class="min-w-full table-auto border-collapse">
+                        <thead class="bg-gray-200">
+                            <tr>
+                                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-b">Factor</th>
+                                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-b">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm">
+                            <tr class="bg-white">
+                                <td class="px-4 py-3 border-b"><strong>Professor Demand:</strong></td>
+                                <td class="px-4 py-3 border-b">{{ impact_factors.professor|default:"No impact data available" }}</td>
+                            </tr>
+                            <tr class="bg-gray-50">
+                                <td class="px-4 py-3 border-b"><strong>Student Year/Classification:</strong></td>
+                                <td class="px-4 py-3 border-b">{{ impact_factors.student_year|default:"No impact data available" }}</td>
+                            </tr>
+                            <tr class="bg-white">
+                                <td class="px-4 py-3 border-b"><strong>Time of Day:</strong></td>
+                                <td class="px-4 py-3 border-b">{{ impact_factors.time_of_day|default:"No impact data available" }}</td>
+                            </tr>
+                            <tr class="bg-gray-50">
+                                <td class="px-4 py-3 border-b"><strong>Days the Class is Offered:</strong></td>
+                                <td class="px-4 py-3 border-b">{{ impact_factors.days_of_week|default:"No impact data available" }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% else %}
+            <p class="text-lg text-gray-700 mt-6">No demand prediction available.</p>
+        {% endif %}
+    </div>
+{% endblock %}

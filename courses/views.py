@@ -1,6 +1,6 @@
 from collections import Counter
 
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import render, redirect
 from django.db.models import Sum, QuerySet, F, Avg, Value
 from courses.models import CourseInfo, CourseCatalog, CourseInfoEXT
@@ -8,6 +8,7 @@ from django.db.models.functions import Greatest
 from django.shortcuts import render
 from django.db.models import Avg, Count
 from .models import CourseInfo, CourseInfoEXT
+from django.core.paginator import Paginator
 import datetime
 
 
@@ -24,6 +25,7 @@ def home(request):
         request.session['year'] = year
 
     courses = CourseCatalog.objects.all()
+
     return render(request, 'home.html', {'major': major, 'year': year, 'courses': courses})
 
 def course_page(request, subject, number):
@@ -225,6 +227,13 @@ def demand_prediction(request, subject, course_number):
     total_enrollment_demand = 0
     total_course = course_info.count()
 
+    impact_factors = {
+        'professor' : 0,
+        'student_year' : 0,
+        'time_of_day' : 0,
+        'days_of_week' : 0
+    }
+
 
     for course in course_info:
 
@@ -269,6 +278,7 @@ def demand_prediction(request, subject, course_number):
         "classification": classification,
         "final_score": initial_value,
         "demand_level": most_common_demand,
+        "impact_factors": impact_factors
     }
 
 
