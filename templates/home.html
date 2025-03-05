@@ -1,31 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Course List</title>
-</head>
-<body>
-     <!-- Display the selected major and year -->
-    <h2>Your Selections:</h2>
-    <p><strong>Major:</strong> {{ major }}</p>
-    <p><strong>Year:</strong> {{ year }}</p>
+{% extends "base.html" %}
 
+{% block content %}
+    <div class="container mx-auto px-6 py-8">
+        <!-- Your Selections Section -->
+        <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Your Selections</h2>
+            <p class="text-lg font-medium text-gray-700">
+                <strong>Major:</strong> <span class="text-blue-600">{{ major }}</span>
+            </p>
+            <p class="text-lg font-medium text-gray-700">
+                <strong>Year:</strong> <span class="text-blue-600">{{ year }}</span>
+            </p>
+        </div>
 
-    <br>
-    <a href="{% url 'instructor_history' %}">
-        <button>Go to Instructor History</button>
-    </a>
-    <h1>Available Courses</h1>
-    <ul>
-        {% for course in courses %}
-            <li>
-                {% url 'course_page' course.subject course.course_number as the_url %}
-                <a href="{{ the_url }}"> {{ course.subject }} {{ course.course_number }} </a>
-            </li>
-        {% empty %}
-            <li>No courses available.</li>
-        {% endfor %}
-    </ul>
-</body>
-</html>
+        <!-- Button to Instructor History -->
+        <div class="mb-6">
+            <a href="{% url 'instructor_history' %}">
+                <button class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300">
+                    Go to Instructor History
+                </button>
+            </a>
+        </div>
+
+        <!-- Available Courses Section -->
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h1 class="text-3xl font-semibold text-gray-800 mb-6">Available Courses</h1>
+            
+            <ul class="list-disc pl-6 space-y-3">
+                {% for course in courses %}
+                    <li class="text-lg text-gray-700">
+                        <a href="{% url 'course_page' course.subject course.course_number %}" class="text-blue-600 hover:text-blue-800 transition-all duration-300">
+                            {{ course.subject }} {{ course.course_number }}
+                        </a>
+                    </li>
+                {% empty %}
+                    <li class="text-gray-500">No courses available.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endblock %}
