@@ -43,6 +43,8 @@ def course_page(request, subject, number):
         'classification': demand_data["classification"],
         'final_score': demand_data["final_score"],
         'demand_level': demand_data["demand_level"],
+        'student_classification': demand_data["student_classification"],
+        'student_major': demand_data["student_major"],
     })
 def startup(request):
     # Check if the form was submitted via POST
@@ -193,6 +195,7 @@ def demand_prediction(request, subject, course_number):
     f_credits_filter = request.GET.get('f_credits', None)  # Optional, defaults to None
     capacity_filter = request.GET.get('capacity', None)  # Optional, defaults to None
     student_year = request.session.get('year', None)
+    student_major = request.session.get('major', None)
 
     # Build the initial query filtering by subject and course_number
     query_filter = {
@@ -278,7 +281,9 @@ def demand_prediction(request, subject, course_number):
         "classification": classification,
         "final_score": initial_value,
         "demand_level": most_common_demand,
-        "impact_factors": impact_factors
+        "impact_factors": impact_factors,
+        "student_classification": student_year,
+        "student_major": student_major,
     }
 
 def historical_pattern_analysis(request):

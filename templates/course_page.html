@@ -59,20 +59,26 @@
                             </tr>
                         </thead>
                         <tbody class="text-sm">
+                            <tr class="bg-gray-50">
+                                <td class="px-4 py-3 border-b"><strong>Student Classification</strong></td>
+                                <td class="px-4 py-3 border-b">
+                                    {% if student_classification == 'Freshman' %} First-year students are less likely to get into this course.
+                                    {% elif student_classification == 'Sophomore' %} Sophomores are less likely to get into this course.
+                                    {% elif student_classification == 'Junior' %} Juniors are less likely to get into this course.
+                                    {% else %} Seniors are less likely to get into this course
+                                    {% endif %}
+                                </td>
+                            </tr>
                             <tr class="bg-white">
-                                <td class="px-4 py-3 border-b"><strong>Professor Demand:</strong></td>
+                                <td class="px-4 py-3 border-b"><strong>Professor Demand</strong></td>
                                 <td class="px-4 py-3 border-b">{{ impact_factors.professor|default:"No impact data available" }}</td>
                             </tr>
-                            <tr class="bg-gray-50">
-                                <td class="px-4 py-3 border-b"><strong>Student Year/Classification:</strong></td>
-                                <td class="px-4 py-3 border-b">{{ impact_factors.student_year|default:"No impact data available" }}</td>
-                            </tr>
                             <tr class="bg-white">
-                                <td class="px-4 py-3 border-b"><strong>Time of Day:</strong></td>
+                                <td class="px-4 py-3 border-b"><strong>Meeting Time</strong></td>
                                 <td class="px-4 py-3 border-b">{{ impact_factors.time_of_day|default:"No impact data available" }}</td>
                             </tr>
                             <tr class="bg-gray-50">
-                                <td class="px-4 py-3 border-b"><strong>Days the Class is Offered:</strong></td>
+                                <td class="px-4 py-3 border-b"><strong>Meeting Pattern</strong></td>
                                 <td class="px-4 py-3 border-b">{{ impact_factors.days_of_week|default:"No impact data available" }}</td>
                             </tr>
                         </tbody>
