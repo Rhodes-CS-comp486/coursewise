@@ -1,6 +1,6 @@
 from collections import Counter
 
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import render, redirect
 from django.db.models import Sum, QuerySet, F, Avg, Value, Max, F, ExpressionWrapper, FloatField
 from courses.models import CourseInfo, CourseCatalog, CourseInfoEXT, Course
@@ -8,6 +8,7 @@ from django.db.models.functions import Greatest
 from django.shortcuts import render
 from django.db.models import Avg, Count
 from .models import CourseInfo, CourseInfoEXT
+from django.core.paginator import Paginator
 import datetime
 import json
 from django.http import JsonResponse
@@ -25,6 +26,7 @@ def home(request):
         request.session['year'] = year
 
     courses = CourseCatalog.objects.all()
+
     return render(request, 'home.html', {'major': major, 'year': year, 'courses': courses})
 
 def course_page(request, subject, number):
@@ -42,6 +44,8 @@ def course_page(request, subject, number):
         'classification': demand_data["classification"],
         'final_score': demand_data["final_score"],
         'demand_level': demand_data["demand_level"],
+        'student_classification': demand_data["student_classification"],
+        'student_major': demand_data["student_major"],
     })
 def startup(request):
     # Check if the form was submitted via POST
@@ -192,6 +196,7 @@ def demand_prediction(request, subject, course_number):
     f_credits_filter = request.GET.get('f_credits', None)  # Optional, defaults to None
     capacity_filter = request.GET.get('capacity', None)  # Optional, defaults to None
     student_year = request.session.get('year', None)
+    student_major = request.session.get('major', None)
 
     # Build the initial query filtering by subject and course_number
     query_filter = {
@@ -226,6 +231,13 @@ def demand_prediction(request, subject, course_number):
     total_enrollment_demand = 0
     total_course = course_info.count()
 
+    impact_factors = {
+        'professor' : 0,
+        'student_year' : 0,
+        'time_of_day' : 0,
+        'days_of_week' : 0
+    }
+
 
     for course in course_info:
 
@@ -237,8 +249,8 @@ def demand_prediction(request, subject, course_number):
             enrollment_demand = course.junior_requests - course.juniors_enrolled
         elif student_year == "Senior":
             enrollment_demand = course.senior_requests - course.seniors_enrolled
-        else:
-            return HttpResponse("Invalid student year.", status=400)
+        #else:
+            #return HttpResponse("Invalid student year.", status=400)
 
         if enrollment_demand < 0:
             enrollment_demand = 0
@@ -254,9 +266,9 @@ def demand_prediction(request, subject, course_number):
     demand_counter = Counter(demand_list)
     most_common_demand, _ = demand_counter.most_common(1)[0]
 
-    if most_common_demand == "high":
+    if most_common_demand == "High": #Bug FIX
         initial_value -= 5
-    elif most_common_demand == "low":
+    elif most_common_demand == "Low": #BUG FIX
         initial_value += 5
 
     if initial_value >= 7:
@@ -270,6 +282,9 @@ def demand_prediction(request, subject, course_number):
         "classification": classification,
         "final_score": initial_value,
         "demand_level": most_common_demand,
+        "impact_factors": impact_factors,
+        "student_classification": student_year,
+        "student_major": student_major,
     }
 
 def historical_pattern_analysis(request):

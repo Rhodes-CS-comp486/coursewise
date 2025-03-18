@@ -1,49 +1,80 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CourseWise - Welcome</title>
-    <style>
-        .error {
-            color: red;
-            font-size: 14px;
-        }
-    </style>
-</head>
-<body>
-    <h1>Welcome to CourseWise</h1>
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 class="text-2xl font-semibold text-gray-800 mb-4">Welcome to CourseWise</h1>
 
     <!-- Form to submit major and year selection -->
-    <form method="POST" action="{% url 'startup' %}">
+    <form method="POST" action="{% url 'startup' %}" class="bg-white p-6 rounded-lg shadow-md">
         {% csrf_token %}
         
-        <label for="major">Select Your Major:</label>
-        <select id="major" name="major">
-            <option value="">-- Select --</option>
-            <option value="Computer Science">Computer Science</option>
-            <option value="English">English</option>
-            <option value="Biology">Biology</option>
-            <option value="Mathematics">Mathematics</option>
-        </select>
+        <div class="mb-4">
+            <label for="major" class="block text-lg font-medium text-gray-700">Select Your Major:</label>
+            <select id="major" name="major" class="mt-2 p-2 border border-gray-300 rounded w-full">
+                <option value="">-- Select --</option>
+                <option value="Africana Studies">Africana Studies</option>
+                <option value="Ancient Mediterranean Studies">Ancient Mediterranean Studies</option>
+                <option value="Anthropology and Sociology">Anthropology and Sociology</option>
+                <option value="Art">Art</option>
+                <option value="Art History">Art History</option>
+                <option value="Art and Art History">Art and Art History</option>
+                <option value="Biochemistry and Molecular Biology">Biochemistry and Molecular Biology</option>
+                <option value="Biology">Biology</option>
+                <option value="Biomathematics">Biomathematics</option>
+                <option value="Business">Business</option>
+                <option value="Chemistry">Chemistry</option>
+                <option value="Chinese Studies">Chinese Studies</option>
+                <option value="Computer Science">Computer Science</option>
+                <option value="Data Analytics">Data Analytics</option>
+                <option value="Economics">Economics</option>
+                <option value="Economics and Business">Economics and Business</option>
+                <option value="Economics and International Studies">Economics and International Studies</option>
+                <option value="Educational Studies">Educational Studies</option>
+                <option value="English">English</option>
+                <option value="Environmental Sciences">Environmental Sciences</option>
+                <option value="Environmental Studies">Environmental Studies</option>
+                <option value="French and Francophone Studies">French and Francophone Studies</option>
+                <option value="German Studies">German Studies</option>
+                <option value="Health Equity">Health Equity</option>
+                <option value="History">History</option>
+                <option value="History and International Studies">History and International Studies</option>
+                <option value="International Studies">International Studies</option>
+                <option value="Latin American and Latinx Studies">Latin American and Latinx Studies</option>
+                <option value="Mathematics and Statistics">Mathematics and Statistics</option>
+                <option value="Media Studies">Media Studies</option>
+                <option value="Modern Languages and Literatures">Modern Languages and Literatures</option>
+                <option value="Music">Music</option>
+                <option value="Music and Psychology">Music and Psychology</option>
+                <option value="Neuroscience">Neuroscience</option>
+                <option value="Philosophy">Philosophy</option>
+                <option value="Philosophy Politics and Economics">Philosophy Politics and Economics</option>
+                <option value="Physics">Physics</option>
+                <option value="Political Science">Political Science</option>
+                <option value="Political Science and International Studies">Political Science and International Studies</option>
+                <option value="Psychology">Psychology</option>
+                <option value="Religious Studies">Religious Studies</option>
+                <option value="Russian Studies">Russian Studies</option>
+                <option value="Russian and International Studies">Russian and International Studies</option>
+                <option value="Spanish Studies">Spanish Studies</option>
+                <option value="Urban Studies">Urban Studies</option>
+                <option value="Self-Designed Major">Self-Designed Major</option>
+            </select>
+        </div>
 
-        <br><br>
+        <div class="mb-4">
+            <label for="year" class="block text-lg font-medium text-gray-700">Select Your Year:</label>
+            <select id="year" name="year" class="mt-2 p-2 border border-gray-300 rounded w-full">
+                <option value="">-- Select --</option>
+                <option value="Freshman">Freshman</option>
+                <option value="Sophomore">Sophomore</option>
+                <option value="Junior">Junior</option>
+                <option value="Senior">Senior</option>
+            </select>
+        </div>
 
-        <label for="year">Select Your Year:</label>
-        <select id="year" name="year">
-            <option value="">-- Select --</option>
-            <option value="Freshman">Freshman</option>
-            <option value="Sophomore">Sophomore</option>
-            <option value="Junior">Junior</option>
-            <option value="Senior">Senior</option>
-        </select>
-
-        <br><br>
-
-        <button type="submit">Submit</button>
+        <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700">Submit</button>
     </form>
 
-    <p id="error-message" class="error">{{ error_message }}</p>
-
-</body>
-</html>
+    {% if error_message %}
+        <p class="error mt-4 text-red-500">{{ error_message }}</p>
+    {% endif %}
+{% endblock %}
