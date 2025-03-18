@@ -248,8 +248,8 @@ def demand_prediction(request, subject, course_number):
             enrollment_demand = course.junior_requests - course.juniors_enrolled
         elif student_year == "Senior":
             enrollment_demand = course.senior_requests - course.seniors_enrolled
-        else:
-            return HttpResponse("Invalid student year.", status=400)
+        #else:
+            #return HttpResponse("Invalid student year.", status=400)
 
         if enrollment_demand < 0:
             enrollment_demand = 0
@@ -265,9 +265,9 @@ def demand_prediction(request, subject, course_number):
     demand_counter = Counter(demand_list)
     most_common_demand, _ = demand_counter.most_common(1)[0]
 
-    if most_common_demand == "high":
+    if most_common_demand == "High":
         initial_value -= 5
-    elif most_common_demand == "low":
+    elif most_common_demand == "Low":
         initial_value += 5
 
     if initial_value >= 7:
