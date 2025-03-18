@@ -265,9 +265,9 @@ def demand_prediction(request, subject, course_number):
     demand_counter = Counter(demand_list)
     most_common_demand, _ = demand_counter.most_common(1)[0]
 
-    if most_common_demand == "High":
+    if most_common_demand == "High": #Bug FIX
         initial_value -= 5
-    elif most_common_demand == "Low":
+    elif most_common_demand == "Low": #BUG FIX
         initial_value += 5
 
     if initial_value >= 7:
