@@ -29,6 +29,28 @@
                 {% endfor %}
             </ul>
         </div>
+    
+     <!-- Suggestions Section -->
+         {% if suggestion_courses %}
+            <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Suggested Courses</h2>
+                <ul class="list-disc pl-6 space-y-3">
+                    {% for course in suggestion_courses %}
+                        <li class="text-gray-700">
+                            <strong>{{ course.subject }} {{ course.course_number }}</strong> - {{ course.instructor }}
+                            <span class="text-gray-500">
+                                (Max Enrollment: <span class="text-blue-500">{{ course.max_enrollment }}</span>,
+                                Actually Enrolled: <span class="text-blue-500">{{ course.students_enrolled }}</span>)
+                            </span>
+                        </li>
+                    {% empty %}
+                        <li class="text-gray-500">No suggestions available for {{ subject }} {{ number }}.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% else %}
+            <p class="text-lg text-gray-700">No suggestions available for {{ subject }} {{ number }}.</p>
+        {% endif %}
 
         <!-- Demand Prediction Section -->
         {% if classification %}
@@ -47,7 +69,7 @@
                         </span>
                     </p>
                 </div>
-
+               
                 <!-- Factors Table -->
                 <h3 class="text-lg font-semibold text-gray-800 mt-6 mb-4">The following factors may be affecting your demand prediction:</h3>
                 <div class="overflow-x-auto bg-gray-50 shadow-md rounded-lg">

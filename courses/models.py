@@ -37,6 +37,9 @@ class CourseInfoEXT(models.Model):
     class Meta:
         db_table = 'courses_courseinfoext'
 
+    def __str__(self):
+        return f"{self.subject} {self.course_number}"
+
 class Course(models.Model):
 
     def _str_(self):

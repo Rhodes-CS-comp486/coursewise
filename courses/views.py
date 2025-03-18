@@ -277,6 +277,10 @@ def demand_prediction(request, subject, course_number):
     else:
         classification = "Low"
 
+    suggestion_courses = CourseInfoEXT.objects.filter(subject=subject, course_number=course_number)
+
+    print("Suggestions:", suggestion_courses)
+
     return {
         "classification": classification,
         "final_score": initial_value,
@@ -284,6 +288,7 @@ def demand_prediction(request, subject, course_number):
         "impact_factors": impact_factors,
         "student_classification": student_year,
         "student_major": student_major,
+        "suggestion_courses": suggestion_courses,
     }
 
 def historical_pattern_analysis(request):
