@@ -13,21 +13,41 @@ import datetime
 import json
 from django.http import JsonResponse
 
+
 def home(request):
     major = request.session.get('major', 'Not selected')
     year = request.session.get('year', 'Not selected')
 
     if request.method == 'POST':
-    # Get the user's selected major and year from the session
+        # Get the user's selected major and year from the session
         major = request.session.get('major', 'Not selected')
         year = request.session.get('year', 'Not selected')
 
         request.session['major'] = major
         request.session['year'] = year
 
+    # Get all courses
     courses = CourseCatalog.objects.all()
 
-    return render(request, 'home.html', {'major': major, 'year': year, 'courses': courses})
+    # Get favorites from session
+    favorites = request.session.get('favorites', [])
+    favorite_courses = []
+
+    # Get course details for each favorite
+    for fav in favorites:
+        subject, course_number = fav.split('-')
+        # Look up this course from your database
+        course = CourseCatalog.objects.filter(subject=subject, course_number=course_number).first()
+        if course:
+            favorite_courses.append(course)
+
+    return render(request, 'home.html', {
+        'major': major,
+        'year': year,
+        'courses': courses,
+        'favorite_courses': favorite_courses
+    })
+
 
 def course_page(request, subject, number):
     offerings = CourseInfo.objects.filter(subject=subject.upper(), course_number=int(number))

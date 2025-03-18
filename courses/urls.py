@@ -33,6 +33,13 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.historical_pattern_analysis, name='home'),  # Use historical_pattern_analysis as the home page
-    path('historical-patterns/', views.historical_pattern_analysis, name='historical_patterns'),  # Additional URL for the same view
+    # Home page must be first to handle the root URL
+    path('', views.home, name='home'),
+
+    # Other URL patterns
+    path('instructor_history/', views.instructor_history, name='instructor_history'),
+    path('add_to_favorites/<str:subject>/<str:course_number>/', views.add_to_favorites, name='add_to_favorites'),
+    path('remove_from_favorites/<str:subject>/<str:course_number>/', views.remove_from_favorites,
+         name='remove_from_favorites'),
+
 ]

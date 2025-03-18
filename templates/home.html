@@ -11,21 +11,74 @@
     <p><strong>Major:</strong> {{ major }}</p>
     <p><strong>Year:</strong> {{ year }}</p>
 
-
     <br>
     <a href="{% url 'instructor_history' %}">
         <button>Go to Instructor History</button>
     </a>
+    
+    <!-- Favorites section -->
+    <h2>Your Favorites</h2>
+    {% if favorite_courses %}
+        <ul>
+            {% for course in favorite_courses %}
+                <li>
+                    {% url 'course_page' course.subject course.course_number as the_url %}
+                    <a href="{{ the_url }}">{{ course.subject }} {{ course.course_number }}</a>
+                    <button onclick="removeFromFavorites('{{ course.subject }}', '{{ course.course_number }}')">Remove</button>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No favorites added yet.</p>
+    {% endif %}
+    
     <h1>Available Courses</h1>
     <ul>
         {% for course in courses %}
             <li>
                 {% url 'course_page' course.subject course.course_number as the_url %}
                 <a href="{{ the_url }}"> {{ course.subject }} {{ course.course_number }} </a>
+                <button onclick="addToFavorites('{{ course.subject }}', '{{ course.course_number }}')">Add to Favorites</button>
             </li>
         {% empty %}
             <li>No courses available.</li>
         {% endfor %}
     </ul>
+    
+    <script>
+        function addToFavorites(subject, courseNumber) {
+            fetch(`/add_to_favorites/${subject}/${courseNumber}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Reload the page to show updated favorites
+                    location.reload();
+                }
+            });
+        }
+        
+        function removeFromFavorites(subject, courseNumber) {
+            fetch(`/remove_from_favorites/${subject}/${courseNumber}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Reload the page to show updated favorites
+                    location.reload();
+                }
+            });
+        }
+    </script>
 </body>
 </html>
