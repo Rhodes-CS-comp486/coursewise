@@ -12,28 +12,60 @@
                 <strong>Year:</strong> <span class="text-blue-600">{{ year }}</span>
             </p>
         </div>
+    
+        <!-- Search Bars Section -->
+        <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Search for Courses or Instructors</h2>
+            
+            <!-- Search by Course -->
+            <form method="get" action="{% url 'home' %}" class="flex space-x-4 mb-4">
+                <div class="flex flex-col w-full">
+                    <label for="courseSearch" class="text-lg font-medium text-gray-700 mb-2">Search by Course</label>
+                    <input type="text" id="courseSearch" name="courseSearch" value="{{ course_search }}" class="px-4 py-2 border rounded-lg w-full" placeholder="Enter course name or number" />
+                </div>
+                
+                <div class="flex items-end">
+                    <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300">
+                        Search
+                    </button>
+                </div>
+            </form>
 
-        <!-- Button to Instructor History -->
-        <div class="mb-6">
+            <!-- Search by Instructor -->
+            <form method="get" action="{% url 'instructor_history' %}" class="flex space-x-4">
+                <div class="flex flex-col w-full">
+                    <label for="instructorSearch" class="text-lg font-medium text-gray-700 mb-2">Search by Instructor</label>
+                    <input type="text" id="instructorSearch" name="instructorSearch" value="{{ instructor_search }}" class="px-4 py-2 border rounded-lg w-full" placeholder="Enter instructor name" />
+                </div>
+                
+                <div class="flex items-end">
+                    <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300">
+                        Search
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Buttons Section (Instructor History & Enrollment Pattern) -->
+        <div class="flex space-x-4 mb-6">
+            <!-- Button to Instructor History -->
             <a href="{% url 'instructor_history' %}">
-                <button class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300">
-                    Go to Instructor History
+                <button class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300 w-full sm:w-auto">
+                    See All Instructor History
+                </button>
+            </a>
+
+            <!-- Button to Historical Enrollment Analysis -->
+            <a href="{% url 'historical_patterns' %}">
+                <button class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300 w-full sm:w-auto">
+                    See Enrollment History
                 </button>
             </a>
         </div>
-        
-         <!-- Button to Instructor History -->
-            <div class="mb-6">
-                <a href="{% url 'historical_patterns' %}">
-                    <button class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300">
-                        See Historical History
-                    </button>
-                </a>
-            </div>
-
+    
         <!-- Available Courses Section -->
         <div class="bg-white shadow-md rounded-lg p-6">
-            <h1 class="text-3xl font-semibold text-gray-800 mb-6">Available Courses</h1>
+            <h1 class="text-3xl font-semibold text-gray-800 mb-6">See All Available Courses</h1>
             
             <ul class="list-disc pl-6 space-y-3">
                 {% for course in courses %}
