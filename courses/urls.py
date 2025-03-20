@@ -38,4 +38,7 @@ urlpatterns = [
     path('<str:subject>/<str:number>/', views.course_page, name='course_page'),
     path('instructor-history/', views.instructor_history, name='instructor_history'),
     path('historical-patterns/', views.historical_pattern_analysis, name='historical_patterns'),
+
+path('add_to_favorites/<str:subject>/<str:course_number>/', views.add_to_favorites, name='add_to_favorites'),
+path('remove_from_favorites/<str:subject>/<str:course_number>/', views.remove_from_favorites, name='remove_from_favorites'),
 ]
