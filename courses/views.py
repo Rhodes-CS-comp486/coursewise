@@ -13,11 +13,17 @@ import datetime
 import json
 
 def home(request):
+    f_credit = request.POST.get('f_credit', 'Not selected')
     major = request.session.get('major', 'Not selected')
     year = request.session.get('year', 'Not selected')
 
     # Get all courses
-    courses = CourseCatalog.objects.all()
+    if f_credit == 'Not selected':
+        courses = CourseInfo.objects.values('subject', 'course_number').distinct().order_by('subject', 'course_number')
+    else:
+        courses = CourseInfo.objects.filter(f_credits__icontains=f_credit).values('subject', 'course_number').distinct().order_by('subject', 'course_number')
+
+
 
     # Allow user input for Search
     course_search = request.GET.get('courseSearch', '').strip()
@@ -381,5 +387,15 @@ def historical_pattern_analysis(request):
         'high_demand_courses': high_demand_courses,
     })
 
+def foundation_filter(request):
+    # Check if the form was submitted via POST
+    if request.method == 'POST':
+        f_credit = request.POST.get('f_credit')
+
+        # Save the selections to the session (so they can be accessed later)
+        request.session['f_credit'] = f_credit
+
+    # Redirect the user to the home page
+    return redirect('home')  # Redirect to the home page after form submission
 
 

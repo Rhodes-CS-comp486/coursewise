@@ -11,6 +11,6 @@ class CourseAdmin(admin.ModelAdmin):
 
 @admin.register(CourseInfo)
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ('subject', 'course_number','course_title')
+    list_display = ('subject', 'course_number','course_title', 'f_credits')
     list_filter = ('subject', 'course_number')
-    search_fields = ('subject', 'course_number','course_title')
+    search_fields = ('subject', 'course_number','course_title', 'f_credits')
