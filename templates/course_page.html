@@ -59,7 +59,7 @@
                 </tbody>
             </table>
         </div>
-    
+
      <!-- Suggestions Section -->
     {% if suggestion_courses %}
         <div class="bg-white shadow-md rounded-lg p-6 mb-6">
@@ -110,24 +110,57 @@
                             <tr class="bg-gray-50">
                                 <td class="px-4 py-3 border-b"><strong>Student Classification</strong></td>
                                 <td class="px-4 py-3 border-b">
-                                    {% if student_classification == 'Freshman' %} First-year students are less likely to get into this course.
-                                    {% elif student_classification == 'Sophomore' %} Sophomores are less likely to get into this course.
-                                    {% elif student_classification == 'Junior' %} Juniors are less likely to get into this course.
-                                    {% else %} Seniors are less likely to get into this course
+                                    {% if student_classification == 'Freshman' %}
+                                        {% if demand_level == 'High' %}
+                                            First-year students are less likely to get into this course due to high demand.
+                                        {% elif demand_level == 'Medium' %}
+                                            First-year students have a moderate chance of getting into this course.
+                                        {% else %}
+                                            First-year students are more likely to get into this course due to low demand.
+                                        {% endif %}
+                                    {% elif student_classification == 'Sophomore' %}
+                                        {% if demand_level == 'High' %}
+                                            Sophomores may have less of a chance to get into this course given the high demand.
+                                        {% elif demand_level == 'Medium' %}
+                                            Sophomores have a moderate chance to get into this course.
+                                        {% else %}
+                                            Sophomores are more likely to get into this course due to low demand.
+                                        {% endif %}
+                                    {% elif student_classification == 'Junior' %}
+                                        {% if demand_level == 'High' %}
+                                            Juniors are less likely to get into this course because of the high demand.
+                                        {% elif demand_level == 'Medium' %}
+                                            Juniors have a moderate chance of getting into this course.
+                                        {% else %}
+                                            Juniors are more likely to get into this course with low demand.
+                                        {% endif %}
+                                    {% else %}
+                                        {% if demand_level == 'High' %}
+                                            Seniors have a moderate chance of getting into this course because of the high demand.
+                                        {% elif demand_level == 'Medium' %}
+                                            Seniors have a moderate chance of getting into this course.
+                                        {% else %}
+                                            Seniors are more likely to get into this course due to low demand.
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <!-- Past Demand -->
+                            <tr class="bg-gray-50">
+                                <td class="px-4 py-3 border-b"><strong>Past Demand</strong></td>
+                                <td class="px-4 py-3 border-b">
+                                    {% if impact_factors.past_demand > 0 %}
+                                        <span class="text-green-500">{{ impact_factors.past_demand }}</span> - Positively impacted your prediction.
+                                    {% elif impact_factors.past_demand < 0 %}
+                                        <span class="text-red-500">{{ impact_factors.past_demand }}</span> - Negatively impacted your prediction.
+                                    {% else %}
+                                        <span class="text-gray-500">{{ impact_factors.past_demand }}</span> Did not affect your prediction.
                                     {% endif %}
                                 </td>
                             </tr>
                             <tr class="bg-white">
                                 <td class="px-4 py-3 border-b"><strong>Professor Demand</strong></td>
                                 <td class="px-4 py-3 border-b">{{ impact_factors.professor|default:"No impact data available" }}</td>
-                            </tr>
-                            <tr class="bg-white">
-                                <td class="px-4 py-3 border-b"><strong>Meeting Time</strong></td>
-                                <td class="px-4 py-3 border-b">{{ impact_factors.time_of_day|default:"No impact data available" }}</td>
-                            </tr>
-                            <tr class="bg-gray-50">
-                                <td class="px-4 py-3 border-b"><strong>Meeting Pattern</strong></td>
-                                <td class="px-4 py-3 border-b">{{ impact_factors.days_of_week|default:"No impact data available" }}</td>
                             </tr>
                         </tbody>
                     </table>

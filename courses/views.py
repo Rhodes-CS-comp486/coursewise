@@ -291,8 +291,10 @@ def demand_prediction(request, subject, course_number):
     impact_factors = {
         'professor' : 0,
         'student_year' : 0,
-        'time_of_day' : 0,
-        'days_of_week' : 0
+        'major': 0,
+        'past_demand': 0
+        #'time_of_day' : 0,
+        #'days_of_week' : 0
     }
 
 
@@ -318,6 +320,7 @@ def demand_prediction(request, subject, course_number):
 
     if avg_enrollment_demand >=5:
         initial_value -= enrollment_demand // 5 # sub 1 for every 5 extra requests
+        impact_factors['student_year'] += avg_enrollment_demand // 5
 
     demand_list = [course_info_ext.demand for course_info_ext in course_info_ext]
     demand_counter = Counter(demand_list)
@@ -325,8 +328,10 @@ def demand_prediction(request, subject, course_number):
 
     if most_common_demand == "High": #Bug FIX
         initial_value -= 5
+        impact_factors['past_demand'] += 5
     elif most_common_demand == "Low": #BUG FIX
         initial_value += 5
+        impact_factors['past_demand'] -= 5
 
     if initial_value >= 7:
         classification = "High"
