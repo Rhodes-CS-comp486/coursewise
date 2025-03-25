@@ -60,6 +60,8 @@ def course_page(request, subject, number):
 
     demand_data = demand_prediction(request, subject, number)
 
+    suggestion_courses = demand_data.get('suggestion_courses', [])
+
 
     return render(request, 'course_page.html', {
         'offerings': unique_offerings,
@@ -69,6 +71,7 @@ def course_page(request, subject, number):
         'demand_level': demand_data["demand_level"],
         'student_classification': demand_data["student_classification"],
         'student_major': demand_data["student_major"],
+        'suggestion_courses': suggestion_courses
     })
 def startup(request):
     # Check if the form was submitted via POST
@@ -301,6 +304,23 @@ def demand_prediction(request, subject, course_number):
     else:
         classification = "Low"
 
+    suggestion_courses = []  # Default empty
+
+    course_number_int = int(course_number)
+
+    if classification == "Low":
+        # Determine course level range
+        level_floor = (course_number_int // 100) * 100  # e.g., 300
+        level_ceiling = level_floor + 100  # e.g., 400 (exclusive)
+
+        suggestion_courses = CourseInfoEXT.objects.filter(
+            subject=subject,
+            course_number__gte=level_floor,
+            course_number__lt=level_ceiling
+        ).exclude(course_number=course_number_int).values('subject', 'course_number').distinct()
+
+    print("Suggestions:", suggestion_courses)
+
     return {
         "classification": classification,
         "final_score": initial_value,
@@ -308,6 +328,7 @@ def demand_prediction(request, subject, course_number):
         "impact_factors": impact_factors,
         "student_classification": student_year,
         "student_major": student_major,
+        "suggestion_courses": suggestion_courses,
     }
 
 def historical_pattern_analysis(request):
