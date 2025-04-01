@@ -13,21 +13,45 @@ import datetime
 import json
 
 def home(request):
+    f_credit = request.POST.get('f_credit', 'Not selected')
     major = request.session.get('major', 'Not selected')
     year = request.session.get('year', 'Not selected')
 
-    if request.method == 'POST':
-    # Get the user's selected major and year from the session
-        major = request.session.get('major', 'Not selected')
-        year = request.session.get('year', 'Not selected')
+    # Get all courses
+    if f_credit == 'Not selected':
+        courses = CourseInfo.objects.values('subject', 'course_number').distinct().order_by('subject', 'course_number')
+    else:
+        courses = CourseInfo.objects.filter(f_credits__icontains=f_credit).values('subject', 'course_number').distinct().order_by('subject', 'course_number')
 
-        request.session['major'] = major
-        request.session['year'] = year
 
-    courses = CourseCatalog.objects.all()
 
-    return render(request, 'home.html', {'major': major, 'year': year, 'courses': courses})
+    # Allow user input for Search
+    course_search = request.GET.get('courseSearch', '').strip()
+    instructor_search = request.GET.get('instructorSearch', '').strip()
 
+    # Apply filters based on search
+    if course_search:
+        # Split the search term by space
+        search_parts = course_search.split()
+
+        if len(search_parts) == 2:
+            # Search format "Subject Number" (e.g., "AFS 105")
+            subject = search_parts[0].upper()  # The first part is the subject
+            number = search_parts[1]  # The second part is the course number
+
+            # Redirect to the course page
+            return redirect('course_page', subject=subject, number=number)
+        else:
+            # If the search term does not follow the expected format (e.g., "AFS 105")
+            return HttpResponse("Invalid course format. Please use 'Subject Number' format.", status=400)
+
+    return render(request, 'home.html', {
+        'major': major,
+        'year': year,
+        'course_search': course_search,
+        'instructor_search': instructor_search,
+        'courses': courses
+    })
 def course_page(request, subject, number):
     offerings = CourseInfo.objects.filter(subject=subject.upper(), course_number=int(number))
     unique_offerings = offerings.values('semester', 'year', 'instructor','max_enrollment', 'students_enrolled').distinct()
@@ -38,6 +62,36 @@ def course_page(request, subject, number):
 
     suggestion_courses = demand_data.get('suggestion_courses', [])
 
+    # Added Instructor information
+
+    instructor_demand_data = []
+    instructors = offerings.values_list('instructor', flat=True).distinct()
+
+    for instructor in instructors:
+        if instructor is not None:
+            # Query all offerings of this course by this instructor
+            history = offerings.filter(instructor=instructor)
+
+            # Calculate average enrollment and capacity
+            avg_data = history.aggregate(
+                avg_enrollment=Avg('students_enrolled'),
+                avg_capacity=Avg('max_enrollment')
+                )
+            avg_enrollment = avg_data['avg_enrollment'] or 0
+            avg_capacity = avg_data['avg_capacity'] or 0
+
+            # Get demand level using existing function
+            demand_level = _calculate_demand_level(history)
+
+            # Store instructor demand data
+            instructor_demand_data.append({
+                'instructor': instructor,
+                'avg_enrollment': round(avg_enrollment),
+                'avg_capacity': round(avg_capacity),
+                'enrollment_vs_capacity': f"{round(avg_enrollment)}/{round(avg_capacity)}",
+                'enrollment_demand': demand_level,
+            })
+
 
     return render(request, 'course_page.html', {
         'offerings': unique_offerings,
@@ -47,7 +101,8 @@ def course_page(request, subject, number):
         'demand_level': demand_data["demand_level"],
         'student_classification': demand_data["student_classification"],
         'student_major': demand_data["student_major"],
-        'suggestion_courses': suggestion_courses
+        'suggestion_courses': suggestion_courses,
+        'instructor_demand_data': instructor_demand_data,
     })
 def startup(request):
     # Check if the form was submitted via POST
@@ -383,3 +438,19 @@ def historical_pattern_analysis(request):
         'enrollment_data': enrollment_json,
         'high_demand_courses': high_demand_courses,
     })
+
+def foundation_filter(request):
+    # Check if the form was submitted via POST
+    if request.method == 'POST':
+        f_credit = request.POST.get('f_credit')
+
+        # Save the selections to the session (so they can be accessed later)
+        request.session['f_credit'] = f_credit
+
+    # Redirect the user to the home page
+    return redirect('home')  # Redirect to the home page after form submission
+
+
+
+
+
