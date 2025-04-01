@@ -8,6 +8,9 @@ class CourseInfo(models.Model):
     subject = models.CharField(max_length=255)
     course_number = models.IntegerField()
     course_title = models.CharField(max_length=255)
+    f_credits = models.CharField(max_length=255)
+    meeting_pattern = models.CharField(max_length=255)
+    meeting_time = models.CharField(max_length=255)
     instructor = models.CharField(max_length=255)
     max_enrollment = models.IntegerField()
     students_enrolled = models.IntegerField()
@@ -36,6 +39,9 @@ class CourseInfoEXT(models.Model):
 
     class Meta:
         db_table = 'courses_courseinfoext'
+
+    def __str__(self):
+        return f"{self.subject} {self.course_number}"
 
 class Course(models.Model):
 

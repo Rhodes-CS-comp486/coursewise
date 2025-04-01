@@ -29,7 +29,55 @@
                 {% endfor %}
             </ul>
         </div>
+    
+        
+    <!-- Instructor Demand Data Section -->
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Instructor Demand Data</h2>
+            <table class="w-full border-collapse border border-gray-300">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="border border-gray-300 px-4 py-2 text-left">Instructor</th>
+                        <th class="border border-gray-300 px-4 py-2 text-left">Avg. Enrollment vs Capacity</th>
+                        <th class="border border-gray-300 px-4 py-2 text-left">Enrollment Demand for Professor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for instructor in instructor_demand_data %}
+                        <tr class="bg-white">
+                            <td class="border border-gray-300 px-4 py-2">{{ instructor.instructor }}</td>
+                            <td class="border border-gray-300 px-4 py-2">{{ instructor.enrollment_vs_capacity }}</td>
+                            <td class="border border-gray-300 px-4 py-2">{{ instructor.enrollment_demand }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="3" class="border border-gray-300 px-4 py-2 text-gray-500 text-center">
+                                No instructor demand data available.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
+     <!-- Suggestions Section -->
+    {% if suggestion_courses %}
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Suggested Similar Courses</h2>
+            <ul class="list-disc pl-6 space-y-3">
+                {% for course in suggestion_courses %}
+                    <li class="text-gray-700">
+                        <strong>{{ course.subject }} {{ course.course_number }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% else %}
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Suggested Similar Courses</h2>
+            <p class="text-gray-500">No course suggestions available.</p>
+        </div>
+    {% endif %}
+    
         <!-- Demand Prediction Section -->
         {% if classification %}
             <div class="bg-white shadow-md rounded-lg p-6 mt-6">
@@ -47,7 +95,7 @@
                         </span>
                     </p>
                 </div>
-
+               
                 <!-- Factors Table -->
                 <h3 class="text-lg font-semibold text-gray-800 mt-6 mb-4">The following factors may be affecting your demand prediction:</h3>
                 <div class="overflow-x-auto bg-gray-50 shadow-md rounded-lg">
@@ -62,24 +110,57 @@
                             <tr class="bg-gray-50">
                                 <td class="px-4 py-3 border-b"><strong>Student Classification</strong></td>
                                 <td class="px-4 py-3 border-b">
-                                    {% if student_classification == 'Freshman' %} First-year students are less likely to get into this course.
-                                    {% elif student_classification == 'Sophomore' %} Sophomores are less likely to get into this course.
-                                    {% elif student_classification == 'Junior' %} Juniors are less likely to get into this course.
-                                    {% else %} Seniors are less likely to get into this course
+                                    {% if student_classification == 'Freshman' %}
+                                        {% if demand_level == 'High' %}
+                                            First-year students are less likely to get into this course due to high demand.
+                                        {% elif demand_level == 'Medium' %}
+                                            First-year students have a moderate chance of getting into this course.
+                                        {% else %}
+                                            First-year students are more likely to get into this course due to low demand.
+                                        {% endif %}
+                                    {% elif student_classification == 'Sophomore' %}
+                                        {% if demand_level == 'High' %}
+                                            Sophomores may have less of a chance to get into this course given the high demand.
+                                        {% elif demand_level == 'Medium' %}
+                                            Sophomores have a moderate chance to get into this course.
+                                        {% else %}
+                                            Sophomores are more likely to get into this course due to low demand.
+                                        {% endif %}
+                                    {% elif student_classification == 'Junior' %}
+                                        {% if demand_level == 'High' %}
+                                            Juniors are less likely to get into this course because of the high demand.
+                                        {% elif demand_level == 'Medium' %}
+                                            Juniors have a moderate chance of getting into this course.
+                                        {% else %}
+                                            Juniors are more likely to get into this course with low demand.
+                                        {% endif %}
+                                    {% else %}
+                                        {% if demand_level == 'High' %}
+                                            Seniors have a moderate chance of getting into this course because of the high demand.
+                                        {% elif demand_level == 'Medium' %}
+                                            Seniors have a moderate chance of getting into this course.
+                                        {% else %}
+                                            Seniors are more likely to get into this course due to low demand.
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <!-- Past Demand -->
+                            <tr class="bg-gray-50">
+                                <td class="px-4 py-3 border-b"><strong>Past Demand</strong></td>
+                                <td class="px-4 py-3 border-b">
+                                    {% if impact_factors.past_demand > 0 %}
+                                        <span class="text-green-500">{{ impact_factors.past_demand }}</span> - Positively impacted your prediction.
+                                    {% elif impact_factors.past_demand < 0 %}
+                                        <span class="text-red-500">{{ impact_factors.past_demand }}</span> - Negatively impacted your prediction.
+                                    {% else %}
+                                        <span class="text-gray-500">{{ impact_factors.past_demand }}</span> Did not affect your prediction.
                                     {% endif %}
                                 </td>
                             </tr>
                             <tr class="bg-white">
                                 <td class="px-4 py-3 border-b"><strong>Professor Demand</strong></td>
                                 <td class="px-4 py-3 border-b">{{ impact_factors.professor|default:"No impact data available" }}</td>
-                            </tr>
-                            <tr class="bg-white">
-                                <td class="px-4 py-3 border-b"><strong>Meeting Time</strong></td>
-                                <td class="px-4 py-3 border-b">{{ impact_factors.time_of_day|default:"No impact data available" }}</td>
-                            </tr>
-                            <tr class="bg-gray-50">
-                                <td class="px-4 py-3 border-b"><strong>Meeting Pattern</strong></td>
-                                <td class="px-4 py-3 border-b">{{ impact_factors.days_of_week|default:"No impact data available" }}</td>
                             </tr>
                         </tbody>
                     </table>

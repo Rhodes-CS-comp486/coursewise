@@ -3,7 +3,7 @@ from collections import Counter
 from django.http import Http404, HttpResponse
 from django.shortcuts import render, redirect
 from django.db.models import Sum, QuerySet, F, Avg, Value, Max, F, ExpressionWrapper, FloatField
-from courses.models import CourseInfo, CourseCatalog, CourseInfoEXT, Course
+from courses.models import CourseInfo, CourseCatalog, CourseInfoEXT
 from django.db.models.functions import Greatest
 from django.shortcuts import render
 from django.db.models import Avg, Count
@@ -11,44 +11,51 @@ from .models import CourseInfo, CourseInfoEXT
 from django.core.paginator import Paginator
 import datetime
 import json
-from django.http import JsonResponse
-
+from django.http import Http404, HttpResponse, JsonResponse
 
 def home(request):
     major = request.session.get('major', 'Not selected')
     year = request.session.get('year', 'Not selected')
 
-    if request.method == 'POST':
-        # Get the user's selected major and year from the session
-        major = request.session.get('major', 'Not selected')
-        year = request.session.get('year', 'Not selected')
-
-        request.session['major'] = major
-        request.session['year'] = year
-
     # Get all courses
     courses = CourseCatalog.objects.all()
 
-    # Get favorites from session
     favorites = request.session.get('favorites', [])
     favorite_courses = []
 
     # Get course details for each favorite
     for fav in favorites:
         subject, course_number = fav.split('-')
-        # Look up this course from your database
         course = CourseCatalog.objects.filter(subject=subject, course_number=course_number).first()
         if course:
             favorite_courses.append(course)
 
+    # Allow user input for Search
+    course_search = request.GET.get('courseSearch', '').strip()
+    instructor_search = request.GET.get('instructorSearch', '').strip()
+
+    # Apply filters based on search
+    if course_search:
+        # Split the search term by space
+        search_parts = course_search.split()
+
+        if len(search_parts) == 2:
+            # Search format "Subject Number" (e.g., "AFS 105")
+            subject = search_parts[0].upper()  # The first part is the subject
+            number = search_parts[1]  # The second part is the course number
+            return redirect('course_page', subject=subject, number=number)
+        else:
+            # If the search term does not follow the expected format (e.g., "AFS 105")
+            return HttpResponse("Invalid course format. Please use 'Subject Number' format.", status=400)
+
     return render(request, 'home.html', {
         'major': major,
         'year': year,
+        'course_search': course_search,
+        'instructor_search': instructor_search,
         'courses': courses,
         'favorite_courses': favorite_courses
     })
-
-
 def course_page(request, subject, number):
     offerings = CourseInfo.objects.filter(subject=subject.upper(), course_number=int(number))
     unique_offerings = offerings.values('semester', 'year', 'instructor','max_enrollment', 'students_enrolled').distinct()
@@ -56,6 +63,10 @@ def course_page(request, subject, number):
     avg_class_size = int(offerings.aggregate(Avg("students_enrolled"))["students_enrolled__avg"]) or 0
 
     demand_data = demand_prediction(request, subject, number)
+
+    # Check if this course is in favorites
+    favorites = request.session.get('favorites', [])
+    is_favorite = f"{subject}-{number}" in favorites
 
 
     return render(request, 'course_page.html', {
@@ -66,6 +77,9 @@ def course_page(request, subject, number):
         'demand_level': demand_data["demand_level"],
         'student_classification': demand_data["student_classification"],
         'student_major': demand_data["student_major"],
+        'subject': subject,
+        'course_number': number,
+        'is_favorite': is_favorite
     })
 def startup(request):
     # Check if the form was submitted via POST
@@ -385,30 +399,6 @@ def historical_pattern_analysis(request):
     })
 
 
-from django.shortcuts import render
-from django.http import JsonResponse
-
-
-# Existing view functions...
-
-def view_favorites(request):
-    favorites = request.session.get('favorites', [])
-    favorite_courses = []
-
-    # Get course details for each favorite
-    for fav in favorites:
-        subject, course_number = fav.split('-')
-        # Look up this course from your database
-        course = Course.objects.filter(subject=subject, course_number=course_number).first()
-        if course:
-            favorite_courses.append(course)
-
-    context = {
-        'favorite_courses': favorite_courses,
-    }
-    return render(request, 'favorites.html', context)
-
-
 def add_to_favorites(request, subject, course_number):
     if 'favorites' not in request.session:
         request.session['favorites'] = []
@@ -435,3 +425,4 @@ def remove_from_favorites(request, subject, course_number):
             request.session.modified = True
 
     return JsonResponse({'status': 'success'})
+
