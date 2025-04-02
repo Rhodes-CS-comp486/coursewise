@@ -11,22 +11,15 @@ from .models import CourseInfo, CourseInfoEXT
 from django.core.paginator import Paginator
 import datetime
 import json
+from django.http import Http404, HttpResponse, JsonResponse
 
 def home(request):
     major = request.session.get('major', 'Not selected')
     year = request.session.get('year', 'Not selected')
 
-    if request.method == 'POST':
-    # Get the user's selected major and year from the session
-        major = request.session.get('major', 'Not selected')
-        year = request.session.get('year', 'Not selected')
-
-        request.session['major'] = major
-        request.session['year'] = year
-
+    # Get all courses
     courses = CourseCatalog.objects.all()
 
-    # Get favorites from session
     favorites = request.session.get('favorites', [])
     favorite_courses = []
 
@@ -37,9 +30,32 @@ def home(request):
         if course:
             favorite_courses.append(course)
 
-    return render(request, 'home.html', {'major': major, 'year': year, 'courses': courses, 'favorite_courses': favorite_courses
-                                         })
+    # Allow user input for Search
+    course_search = request.GET.get('courseSearch', '').strip()
+    instructor_search = request.GET.get('instructorSearch', '').strip()
 
+    # Apply filters based on search
+    if course_search:
+        # Split the search term by space
+        search_parts = course_search.split()
+
+        if len(search_parts) == 2:
+            # Search format "Subject Number" (e.g., "AFS 105")
+            subject = search_parts[0].upper()  # The first part is the subject
+            number = search_parts[1]  # The second part is the course number
+            return redirect('course_page', subject=subject, number=number)
+        else:
+            # If the search term does not follow the expected format (e.g., "AFS 105")
+            return HttpResponse("Invalid course format. Please use 'Subject Number' format.", status=400)
+
+    return render(request, 'home.html', {
+        'major': major,
+        'year': year,
+        'course_search': course_search,
+        'instructor_search': instructor_search,
+        'courses': courses,
+        'favorite_courses': favorite_courses
+    })
 def course_page(request, subject, number):
     offerings = CourseInfo.objects.filter(subject=subject.upper(), course_number=int(number))
     unique_offerings = offerings.values('semester', 'year', 'instructor','max_enrollment', 'students_enrolled').distinct()
@@ -47,6 +63,10 @@ def course_page(request, subject, number):
     avg_class_size = int(offerings.aggregate(Avg("students_enrolled"))["students_enrolled__avg"]) or 0
 
     demand_data = demand_prediction(request, subject, number)
+
+    # Check if this course is in favorites
+    favorites = request.session.get('favorites', [])
+    is_favorite = f"{subject}-{number}" in favorites
 
 
     return render(request, 'course_page.html', {
@@ -57,6 +77,9 @@ def course_page(request, subject, number):
         'demand_level': demand_data["demand_level"],
         'student_classification': demand_data["student_classification"],
         'student_major': demand_data["student_major"],
+        'subject': subject,
+        'course_number': number,
+        'is_favorite': is_favorite
     })
 def startup(request):
     # Check if the form was submitted via POST
@@ -77,7 +100,7 @@ def startup(request):
             error_message = "Please select both a major and a year."
             return render(request, 'startup.html', {'error_message': error_message})
 
-    # Default view for get request (show the form)
+    # Default view for GET request (show the form)
     return render(request, 'startup.html')
 
 def instructor_history(request):
@@ -159,33 +182,6 @@ def instructor_history(request):
         'instructor_data': instructor_data
     })
 
-
-def add_to_favorites(request, subject, course_number):
-    if 'favorites' not in request.session:
-        request.session['favorites'] = []
-
-    course_id = f"{subject}-{course_number}"
-    favorites = request.session['favorites']
-
-    if course_id not in favorites:
-        favorites.append(course_id)
-        request.session['favorites'] = favorites
-        request.session.modified = True
-
-    return JsonResponse({'status': 'success'})
-
-
-def remove_from_favorites(request, subject, course_number):
-    if 'favorites' in request.session:
-        course_id = f"{subject}-{course_number}"
-        favorites = request.session['favorites']
-
-        if course_id in favorites:
-            favorites.remove(course_id)
-            request.session['favorites'] = favorites
-            request.session.modified = True
-
-    return JsonResponse({'status': 'success'})
 
 def _calculate_demand_level(course_history):
     """Calculate demand level based on enrollment vs max capacity"""
@@ -325,21 +321,6 @@ def demand_prediction(request, subject, course_number):
         "student_major": student_major,
     }
 
-
-def add_to_favorites(request, subject, course_number):
-    if 'favorites' not in request.session:
-        request.session['favorites'] = []
-
-    course_id = f"{subject}-{course_number}"
-    favorites = request.session['favorites']
-
-    if course_id not in favorites:
-        favorites.append(course_id)
-        request.session['favorites'] = favorites
-        request.session.modified = True  # This line is crucial
-
-    return JsonResponse({'status': 'success'})
-
 def historical_pattern_analysis(request):
     # Get data for courses from the past 2 years
     courses = CourseInfo.objects.all().order_by('-year', '-semester')
@@ -418,4 +399,30 @@ def historical_pattern_analysis(request):
     })
 
 
+def add_to_favorites(request, subject, course_number):
+    if 'favorites' not in request.session:
+        request.session['favorites'] = []
+
+    course_id = f"{subject}-{course_number}"
+    favorites = request.session['favorites']
+
+    if course_id not in favorites:
+        favorites.append(course_id)
+        request.session['favorites'] = favorites
+        request.session.modified = True
+
+    return JsonResponse({'status': 'success'})
+
+
+def remove_from_favorites(request, subject, course_number):
+    if 'favorites' in request.session:
+        course_id = f"{subject}-{course_number}"
+        favorites = request.session['favorites']
+
+        if course_id in favorites:
+            favorites.remove(course_id)
+            request.session['favorites'] = favorites
+            request.session.modified = True
+
+    return JsonResponse({'status': 'success'})
 
