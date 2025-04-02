@@ -98,7 +98,6 @@ def course_page(request, subject, number):
         'offerings': unique_offerings,
         'avg_class_size': avg_class_size,
         'classification': demand_data["classification"],
-        'final_score': demand_data["final_score"],
         'demand_level': demand_data["demand_level"],
         'student_classification': demand_data["student_classification"],
         'student_major': demand_data["student_major"],
