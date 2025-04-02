@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <!-- Search Bar Section -->
+    <div class="container mx-auto px-6 py-4 mb-8">
+        <form method="get" action="{% url 'degree_requirements' %}" class="flex items-center justify-center space-x-4">
+            <input type="text" name="search_query" value="{{ search_query }}" class="px-4 py-2 border rounded-lg w-1/3" placeholder="Search for a major..." />
+            <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300">
+                Search
+            </button>
+        </form>
+    </div>
+
+    <div class="container mx-auto px-6 py-8">
+        <h1 class="text-3xl font-semibold text-gray-800 mb-6">Degree Requirements</h1>
+
+        <!-- Display Major and Courses -->
+        {% if major %}
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">{{ major.name }} Courses</h2>
+
+            <!-- Progress Bar -->
+            <div class="mb-4">
+                <div class="text-lg mb-2">Progress: {{ progress_percentage|floatformat:1 }}%</div>
+                <div class="bg-gray-200 rounded-full h-2.5">
+                    <div class="bg-blue-600 h-2.5 rounded-full" style="width: {{ progress_percentage }}%"></div>
+                </div>
+            </div>
+
+            <!-- Course Check Box -->
+            <form method="post" action="{% url 'update_progress' %}">
+                {% csrf_token %}
+                <ul>
+                    {% for course in courses %}
+                        <li>
+                            <input type="checkbox" name="course_{{ course }}" 
+                                   {% if course in completed_courses %}checked{% endif %}>
+                            {{ course }}
+                        </li>
+                    {% endfor %}
+                </ul>
+                <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300">
+                    Save Progress
+                </button>
+            </form>
+        {% endif %}
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+            {% for major in majors %}
+                <div class="bg-white shadow-lg rounded-lg p-6">
+                    <div class="text-center">
+                        <h2 class="text-2xl font-semibold text-blue-600 mb-4">{{ major.name }}</h2>
+                        <a href="{% url 'degree_requirements' %}?major_id={{ major.id }}">
+                            <button class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300 w-full">
+                                View Requirements
+                            </button>
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

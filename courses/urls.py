@@ -38,4 +38,6 @@ urlpatterns = [
     path('<str:subject>/<str:number>/', views.course_page, name='course_page'),
     path('instructor-history/', views.instructor_history, name='instructor_history'),
     path('historical-patterns/', views.historical_pattern_analysis, name='historical_patterns'),
+    path('degree_requirements/', views.degree_requirements, name='degree_requirements'),
+    path('update_progress/', views.update_progress, name='update_progress'),
 ]
