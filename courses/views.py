@@ -669,19 +669,11 @@ def degree_requirements(request):
         })
 
 def update_progress(request):
-    if request.method == 'POST':
-        completed_courses = request.session.get('completed_courses', [])
-
-        # Loop through all the checked courses and update the session
-        for course_key in request.POST:
-            if course_key.startswith('course_'):
-                course_name = course_key.split('_')[1]  # Extract the course name
-                if request.POST[course_key] == 'on':  # If the box was checked
-                    if course_name not in completed_courses:
-                        completed_courses.append(course_name)
-                else:  # If the box was unchecked
-                    if course_name in completed_courses:
-                        completed_courses.remove(course_name)
+    completed_courses = []
+    for course_key in request.POST:
+        if course_key.startswith('course_'):
+            course_name = course_key.split('_')[1]
+            completed_courses.append(course_name)
 
         # Save the updated course progress to the session
         request.session['completed_courses'] = completed_courses

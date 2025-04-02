@@ -32,7 +32,7 @@
                 <ul>
                     {% for course in courses %}
                         <li>
-                            <input type="checkbox" name="course_{{ course }}" 
+                            <input type="checkbox" name="course_{{ course }}"
                                    {% if course in completed_courses %}checked{% endif %}>
                             {{ course }}
                         </li>
