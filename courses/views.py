@@ -26,7 +26,19 @@ def home(request):
 
     courses = CourseCatalog.objects.all()
 
-    return render(request, 'home.html', {'major': major, 'year': year, 'courses': courses})
+    # Get favorites from session
+    favorites = request.session.get('favorites', [])
+    favorite_courses = []
+
+    # Get course details for each favorite
+    for fav in favorites:
+        subject, course_number = fav.split('-')
+        course = CourseCatalog.objects.filter(subject=subject, course_number=course_number).first()
+        if course:
+            favorite_courses.append(course)
+
+    return render(request, 'home.html', {'major': major, 'year': year, 'courses': courses, 'favorite_courses': favorite_courses
+                                         })
 
 def course_page(request, subject, number):
     offerings = CourseInfo.objects.filter(subject=subject.upper(), course_number=int(number))
@@ -147,6 +159,33 @@ def instructor_history(request):
         'instructor_data': instructor_data
     })
 
+
+def add_to_favorites(request, subject, course_number):
+    if 'favorites' not in request.session:
+        request.session['favorites'] = []
+
+    course_id = f"{subject}-{course_number}"
+    favorites = request.session['favorites']
+
+    if course_id not in favorites:
+        favorites.append(course_id)
+        request.session['favorites'] = favorites
+        request.session.modified = True
+
+    return JsonResponse({'status': 'success'})
+
+
+def remove_from_favorites(request, subject, course_number):
+    if 'favorites' in request.session:
+        course_id = f"{subject}-{course_number}"
+        favorites = request.session['favorites']
+
+        if course_id in favorites:
+            favorites.remove(course_id)
+            request.session['favorites'] = favorites
+            request.session.modified = True
+
+    return JsonResponse({'status': 'success'})
 
 def _calculate_demand_level(course_history):
     """Calculate demand level based on enrollment vs max capacity"""
@@ -285,6 +324,21 @@ def demand_prediction(request, subject, course_number):
         "student_classification": student_year,
         "student_major": student_major,
     }
+
+
+def add_to_favorites(request, subject, course_number):
+    if 'favorites' not in request.session:
+        request.session['favorites'] = []
+
+    course_id = f"{subject}-{course_number}"
+    favorites = request.session['favorites']
+
+    if course_id not in favorites:
+        favorites.append(course_id)
+        request.session['favorites'] = favorites
+        request.session.modified = True  # This line is crucial
+
+    return JsonResponse({'status': 'success'})
 
 def historical_pattern_analysis(request):
     # Get data for courses from the past 2 years
