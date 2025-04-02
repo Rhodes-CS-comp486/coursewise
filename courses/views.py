@@ -248,46 +248,67 @@ def _determine_schedule(course_history):
         return "Varies"
 
 def demand_prediction(request, subject, course_number):
-    # Start with an initial value
-    initial_value = 10
-    semester_filter = request.GET.get('semester', None)  # Optional, defaults to None
-    f_credits_filter = request.GET.get('f_credits', None)  # Optional, defaults to None
-    capacity_filter = request.GET.get('capacity', None)  # Optional, defaults to None
-    student_year = request.session.get('year', None)
-    student_major = request.session.get('major', None)
+    instances = CourseInfo.objects.filter(subject=subject, course_number=course_number).distinct()
+    student_major = request.session.get('major')
+    student_year = request.session.get('year')
+    class_enrollment = 0
+    course_demand = 0
+    prediction_offerings = instances.count()
+    demand_offerings = instances.count()
 
-    # Build the initial query filtering by subject and course_number
-    query_filter = {
-        'subject': subject,
-        'course_number': course_number,
-        #'instructor' : instructor,
-    }
+    for instance in instances:
+        all_requests = instance.senior_requests + instance.junior_requests + instance.sophomore_requests + instance.first_year_requests
 
-    # Add optional filters to the query if they are provided
-    if semester_filter:
-        query_filter['semester'] = semester_filter
-    if f_credits_filter:
-        query_filter['f_credits'] = f_credits_filter
-    if capacity_filter:
-        query_filter['capacity'] = capacity_filter
+        if instance.max_enrollment == 0:
+            demand_offerings = demand_offerings - 1
+            continue
 
-    # Query the CourseInfoEXT model using the dynamic query_filter
-    course_info_ext = CourseInfoEXT.objects.filter(**query_filter)
+        instance_demand = all_requests / instance.max_enrollment
+        course_demand = course_demand + instance_demand
 
-    if not course_info_ext:
-        raise Http404("Course not found in extended info.")
+        if student_year == "Freshman":
+            class_requests = instance.first_year_requests
+            class_enrolled = instance.first_years_enrolled
+        elif student_year == "Sophomore":
+            class_requests = instance.sophomore_requests
+            class_enrolled = instance.sophomores_enrolled
+        elif student_year == "Junior":
+            class_requests = instance.junior_requests
+            class_enrolled = instance.juniors_enrolled
+        else:
+            class_requests = instance.senior_requests
+            class_enrolled = instance.seniors_enrolled
 
-    avg_f_credits = course_info_ext.aggregate(Avg('f_credits'))['f_credits__avg']
-    avg_major_minor = course_info_ext.aggregate(Avg('major_minor'))['major_minor__avg']
-    #avg_demand = course_info_ext.aggregate(Avg('demand'))['demand__avg']
+        if class_requests == 0:
+            prediction_offerings = prediction_offerings - 1
+            continue
 
-    initial_value -= avg_f_credits
-    initial_value -= avg_major_minor
+        instance_class_demand = class_enrolled / class_requests
+        class_enrollment = class_enrollment + instance_class_demand
 
-    course_info = CourseInfo.objects.filter(subject=subject, course_number=course_number)
 
-    total_enrollment_demand = 0
-    total_course = course_info.count()
+    if demand_offerings > 0:
+        demand_num = course_demand / demand_offerings
+    else:
+        demand_num = 0
+    if prediction_offerings > 0:
+        prediction_num = class_enrollment / prediction_offerings
+    else:
+        prediction_num = 0
+
+    if prediction_num > 0.7:
+        classification = 'High'
+    elif 0.4 < prediction_num <= 0.7:
+        classification = 'Medium'
+    else:
+        classification = 'Low'
+
+    if demand_num > 0.7:
+        demand_level = 'High'
+    elif 0.4 < demand_num <= 0.7:
+        demand_level = 'Medium'
+    else:
+        demand_level = 'Low'
 
     impact_factors = {
         'professor' : 0,
@@ -297,49 +318,6 @@ def demand_prediction(request, subject, course_number):
         #'time_of_day' : 0,
         #'days_of_week' : 0
     }
-
-
-    for course in course_info:
-
-        if student_year == "Freshman":
-            enrollment_demand = course.first_year_requests - course.first_years_enrolled
-        elif student_year == "Sophomore":
-            enrollment_demand = course.sophomore_requests - course.sophomores_enrolled
-        elif student_year == "Junior":
-            enrollment_demand = course.junior_requests - course.juniors_enrolled
-        elif student_year == "Senior":
-            enrollment_demand = course.senior_requests - course.seniors_enrolled
-        #else:
-            #return HttpResponse("Invalid student year.", status=400)
-
-        if enrollment_demand < 0:
-            enrollment_demand = 0
-
-        total_enrollment_demand += enrollment_demand
-
-    avg_enrollment_demand = total_enrollment_demand / total_course
-
-    if avg_enrollment_demand >=5:
-        initial_value -= enrollment_demand // 5 # sub 1 for every 5 extra requests
-        impact_factors['student_year'] += avg_enrollment_demand // 5
-
-    demand_list = [course_info_ext.demand for course_info_ext in course_info_ext]
-    demand_counter = Counter(demand_list)
-    most_common_demand, _ = demand_counter.most_common(1)[0]
-
-    if most_common_demand == "High": #Bug FIX
-        initial_value -= 5
-        impact_factors['past_demand'] += 5
-    elif most_common_demand == "Low": #BUG FIX
-        initial_value += 5
-        impact_factors['past_demand'] -= 5
-
-    if initial_value >= 7:
-        classification = "High"
-    elif 4 <= initial_value <= 6:
-        classification = "Medium"
-    else:
-        classification = "Low"
 
     suggestion_courses = []  # Default empty
 
@@ -360,8 +338,7 @@ def demand_prediction(request, subject, course_number):
 
     return {
         "classification": classification,
-        "final_score": initial_value,
-        "demand_level": most_common_demand,
+        "demand_level": demand_level,
         "impact_factors": impact_factors,
         "student_classification": student_year,
         "student_major": student_major,
@@ -444,19 +421,3 @@ def historical_pattern_analysis(request):
         'enrollment_data': enrollment_json,
         'high_demand_courses': high_demand_courses,
     })
-
-def foundation_filter(request):
-    # Check if the form was submitted via POST
-    if request.method == 'POST':
-        f_credit = request.POST.get('f_credit')
-
-        # Save the selections to the session (so they can be accessed later)
-        request.session['f_credit'] = f_credit
-
-    # Redirect the user to the home page
-    return redirect('home')  # Redirect to the home page after form submission
-
-
-
-
-
