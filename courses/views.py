@@ -13,45 +13,21 @@ import datetime
 import json
 
 def home(request):
-    f_credit = request.POST.get('f_credit', 'Not selected')
     major = request.session.get('major', 'Not selected')
     year = request.session.get('year', 'Not selected')
 
-    # Get all courses
-    if f_credit == 'Not selected':
-        courses = CourseInfo.objects.values('subject', 'course_number').distinct().order_by('subject', 'course_number')
-    else:
-        courses = CourseInfo.objects.filter(f_credits__icontains=f_credit).values('subject', 'course_number').distinct().order_by('subject', 'course_number')
+    if request.method == 'POST':
+    # Get the user's selected major and year from the session
+        major = request.session.get('major', 'Not selected')
+        year = request.session.get('year', 'Not selected')
 
+        request.session['major'] = major
+        request.session['year'] = year
 
+    courses = CourseCatalog.objects.all()
 
-    # Allow user input for Search
-    course_search = request.GET.get('courseSearch', '').strip()
-    instructor_search = request.GET.get('instructorSearch', '').strip()
+    return render(request, 'home.html', {'major': major, 'year': year, 'courses': courses})
 
-    # Apply filters based on search
-    if course_search:
-        # Split the search term by space
-        search_parts = course_search.split()
-
-        if len(search_parts) == 2:
-            # Search format "Subject Number" (e.g., "AFS 105")
-            subject = search_parts[0].upper()  # The first part is the subject
-            number = search_parts[1]  # The second part is the course number
-
-            # Redirect to the course page
-            return redirect('course_page', subject=subject, number=number)
-        else:
-            # If the search term does not follow the expected format (e.g., "AFS 105")
-            return HttpResponse("Invalid course format. Please use 'Subject Number' format.", status=400)
-
-    return render(request, 'home.html', {
-        'major': major,
-        'year': year,
-        'course_search': course_search,
-        'instructor_search': instructor_search,
-        'courses': courses
-    })
 def course_page(request, subject, number):
     offerings = CourseInfo.objects.filter(subject=subject.upper(), course_number=int(number))
     unique_offerings = offerings.values('semester', 'year', 'instructor','max_enrollment', 'students_enrolled').distinct()
@@ -60,15 +36,17 @@ def course_page(request, subject, number):
 
     demand_data = demand_prediction(request, subject, number)
 
+    suggestion_courses = demand_data.get('suggestion_courses', [])
+
 
     return render(request, 'course_page.html', {
         'offerings': unique_offerings,
         'avg_class_size': avg_class_size,
         'classification': demand_data["classification"],
-        'final_score': demand_data["final_score"],
         'demand_level': demand_data["demand_level"],
         'student_classification': demand_data["student_classification"],
         'student_major': demand_data["student_major"],
+        'suggestion_courses': suggestion_courses
     })
 def startup(request):
     # Check if the form was submitted via POST
@@ -213,101 +191,99 @@ def _determine_schedule(course_history):
         return "Varies"
 
 def demand_prediction(request, subject, course_number):
-    # Start with an initial value
-    initial_value = 10
-    semester_filter = request.GET.get('semester', None)  # Optional, defaults to None
-    f_credits_filter = request.GET.get('f_credits', None)  # Optional, defaults to None
-    capacity_filter = request.GET.get('capacity', None)  # Optional, defaults to None
-    student_year = request.session.get('year', None)
-    student_major = request.session.get('major', None)
+    instances = CourseInfo.objects.filter(subject=subject, course_number=course_number).distinct()
+    student_major = request.session.get('major')
+    student_year = request.session.get('year')
+    class_enrollment = 0
+    course_demand = 0
+    prediction_offerings = instances.count()
+    demand_offerings = instances.count()
 
-    # Build the initial query filtering by subject and course_number
-    query_filter = {
-        'subject': subject,
-        'course_number': course_number,
-        #'instructor' : instructor,
-    }
+    for instance in instances:
+        all_requests = instance.senior_requests + instance.junior_requests + instance.sophomore_requests + instance.first_year_requests
 
-    # Add optional filters to the query if they are provided
-    if semester_filter:
-        query_filter['semester'] = semester_filter
-    if f_credits_filter:
-        query_filter['f_credits'] = f_credits_filter
-    if capacity_filter:
-        query_filter['capacity'] = capacity_filter
+        if instance.max_enrollment == 0:
+            demand_offerings = demand_offerings - 1
+            continue
 
-    # Query the CourseInfoEXT model using the dynamic query_filter
-    course_info_ext = CourseInfoEXT.objects.filter(**query_filter)
-
-    if not course_info_ext:
-        raise Http404("Course not found in extended info.")
-
-    avg_f_credits = course_info_ext.aggregate(Avg('f_credits'))['f_credits__avg']
-    avg_major_minor = course_info_ext.aggregate(Avg('major_minor'))['major_minor__avg']
-    #avg_demand = course_info_ext.aggregate(Avg('demand'))['demand__avg']
-
-    initial_value -= avg_f_credits
-    initial_value -= avg_major_minor
-
-    course_info = CourseInfo.objects.filter(subject=subject, course_number=course_number)
-
-    total_enrollment_demand = 0
-    total_course = course_info.count()
-
-    impact_factors = {
-        'professor' : 0,
-        'student_year' : 0,
-        'time_of_day' : 0,
-        'days_of_week' : 0
-    }
-
-
-    for course in course_info:
+        instance_demand = all_requests / instance.max_enrollment
+        course_demand = course_demand + instance_demand
 
         if student_year == "Freshman":
-            enrollment_demand = course.first_year_requests - course.first_years_enrolled
+            class_requests = instance.first_year_requests
+            class_enrolled = instance.first_years_enrolled
         elif student_year == "Sophomore":
-            enrollment_demand = course.sophomore_requests - course.sophomores_enrolled
+            class_requests = instance.sophomore_requests
+            class_enrolled = instance.sophomores_enrolled
         elif student_year == "Junior":
-            enrollment_demand = course.junior_requests - course.juniors_enrolled
-        elif student_year == "Senior":
-            enrollment_demand = course.senior_requests - course.seniors_enrolled
-        #else:
-            #return HttpResponse("Invalid student year.", status=400)
+            class_requests = instance.junior_requests
+            class_enrolled = instance.juniors_enrolled
+        else:
+            class_requests = instance.senior_requests
+            class_enrolled = instance.seniors_enrolled
 
-        if enrollment_demand < 0:
-            enrollment_demand = 0
+        if class_requests == 0:
+            prediction_offerings = prediction_offerings - 1
+            continue
 
-        total_enrollment_demand += enrollment_demand
+        instance_class_demand = class_enrolled / class_requests
+        class_enrollment = class_enrollment + instance_class_demand
 
-    avg_enrollment_demand = total_enrollment_demand / total_course
 
-    if avg_enrollment_demand >=5:
-        initial_value -= enrollment_demand // 5 # sub 1 for every 5 extra requests
-
-    demand_list = [course_info_ext.demand for course_info_ext in course_info_ext]
-    demand_counter = Counter(demand_list)
-    most_common_demand, _ = demand_counter.most_common(1)[0]
-
-    if most_common_demand == "High": #Bug FIX
-        initial_value -= 5
-    elif most_common_demand == "Low": #BUG FIX
-        initial_value += 5
-
-    if initial_value >= 7:
-        classification = "High"
-    elif 4 <= initial_value <= 6:
-        classification = "Medium"
+    if demand_offerings > 0:
+        demand_num = course_demand / demand_offerings
     else:
-        classification = "Low"
+        demand_num = 0
+    if prediction_offerings > 0:
+        prediction_num = class_enrollment / prediction_offerings
+    else:
+        prediction_num = 0
+
+    if prediction_num > 0.7:
+        classification = 'High'
+    elif 0.4 < prediction_num <= 0.7:
+        classification = 'Medium'
+    else:
+        classification = 'Low'
+
+    if demand_num > 0.7:
+        demand_level = 'High'
+    elif 0.4 < demand_num <= 0.7:
+        demand_level = 'Medium'
+    else:
+        demand_level = 'Low'
+
+    impact_factors = {
+        'professor': 0,
+        'student_year': 0,
+        'time_of_day': 0,
+        'days_of_week': 0
+    }
+
+    suggestion_courses = []  # Default empty
+
+    course_number_int = int(course_number)
+
+    if classification == "Low":
+        # Determine course level range
+        level_floor = (course_number_int // 100) * 100  # e.g., 300
+        level_ceiling = level_floor + 100  # e.g., 400 (exclusive)
+
+        suggestion_courses = CourseInfoEXT.objects.filter(
+            subject=subject,
+            course_number__gte=level_floor,
+            course_number__lt=level_ceiling
+        ).exclude(course_number=course_number_int).values('subject', 'course_number').distinct()
+
+    print("Suggestions:", suggestion_courses)
 
     return {
         "classification": classification,
-        "final_score": initial_value,
-        "demand_level": most_common_demand,
+        "demand_level": demand_level,
         "impact_factors": impact_factors,
         "student_classification": student_year,
         "student_major": student_major,
+        "suggestion_courses": suggestion_courses,
     }
 
 def historical_pattern_analysis(request):
@@ -386,16 +362,3 @@ def historical_pattern_analysis(request):
         'enrollment_data': enrollment_json,
         'high_demand_courses': high_demand_courses,
     })
-
-def foundation_filter(request):
-    # Check if the form was submitted via POST
-    if request.method == 'POST':
-        f_credit = request.POST.get('f_credit')
-
-        # Save the selections to the session (so they can be accessed later)
-        request.session['f_credit'] = f_credit
-
-    # Redirect the user to the home page
-    return redirect('home')  # Redirect to the home page after form submission
-
-
