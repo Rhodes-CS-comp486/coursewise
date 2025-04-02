@@ -18,7 +18,7 @@
             <ul class="list-disc pl-6 space-y-3">
                 {% for offering in offerings %}
                     <li class="text-gray-700">
-                        <strong>{{ offering.semester }} {{ offering.year }}</strong> - {{ offering.instructor }} 
+                        <strong>{{ offering.semester }} {{ offering.year }}</strong> - {{ offering.instructor }}
                         <span class="text-gray-500"> 
                             (Max Enrollment: <span class="text-blue-500">{{ offering.max_enrollment }}</span>, 
                             Actually Enrolled: <span class="text-blue-500">{{ offering.students_enrolled }}</span>)

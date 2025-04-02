@@ -54,7 +54,7 @@ def home(request):
     })
 def course_page(request, subject, number):
     offerings = CourseInfo.objects.filter(subject=subject.upper(), course_number=int(number))
-    unique_offerings = offerings.values('semester', 'year', 'instructor','max_enrollment', 'students_enrolled').distinct()
+    unique_offerings = offerings.values('semester', 'year', 'instructor', 'max_enrollment','students_enrolled').distinct()
 
     avg_class_size = int(offerings.aggregate(Avg("students_enrolled"))["students_enrolled__avg"]) or 0
 
@@ -92,6 +92,7 @@ def course_page(request, subject, number):
                 'enrollment_demand': demand_level,
             })
 
+    print(list(unique_offerings))  # Check if NULLs are present
 
     return render(request, 'course_page.html', {
         'offerings': unique_offerings,
