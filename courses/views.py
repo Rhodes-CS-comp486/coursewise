@@ -13,21 +13,45 @@ import datetime
 import json
 
 def home(request):
+    f_credit = request.POST.get('f_credit', 'Not selected')
     major = request.session.get('major', 'Not selected')
     year = request.session.get('year', 'Not selected')
 
-    if request.method == 'POST':
-    # Get the user's selected major and year from the session
-        major = request.session.get('major', 'Not selected')
-        year = request.session.get('year', 'Not selected')
+    # Get all courses
+    if f_credit == 'Not selected':
+        courses = CourseInfo.objects.values('subject', 'course_number').distinct().order_by('subject', 'course_number')
+    else:
+        courses = CourseInfo.objects.filter(f_credits__icontains=f_credit).values('subject', 'course_number').distinct().order_by('subject', 'course_number')
 
-        request.session['major'] = major
-        request.session['year'] = year
 
-    courses = CourseCatalog.objects.all()
 
-    return render(request, 'home.html', {'major': major, 'year': year, 'courses': courses})
+    # Allow user input for Search
+    course_search = request.GET.get('courseSearch', '').strip()
+    instructor_search = request.GET.get('instructorSearch', '').strip()
 
+    # Apply filters based on search
+    if course_search:
+        # Split the search term by space
+        search_parts = course_search.split()
+
+        if len(search_parts) == 2:
+            # Search format "Subject Number" (e.g., "AFS 105")
+            subject = search_parts[0].upper()  # The first part is the subject
+            number = search_parts[1]  # The second part is the course number
+
+            # Redirect to the course page
+            return redirect('course_page', subject=subject, number=number)
+        else:
+            # If the search term does not follow the expected format (e.g., "AFS 105")
+            return HttpResponse("Invalid course format. Please use 'Subject Number' format.", status=400)
+
+    return render(request, 'home.html', {
+        'major': major,
+        'year': year,
+        'course_search': course_search,
+        'instructor_search': instructor_search,
+        'courses': courses
+    })
 def course_page(request, subject, number):
     offerings = CourseInfo.objects.filter(subject=subject.upper(), course_number=int(number))
     unique_offerings = offerings.values('semester', 'year', 'instructor','max_enrollment', 'students_enrolled').distinct()
