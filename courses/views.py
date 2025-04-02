@@ -65,7 +65,7 @@ def startup(request):
             error_message = "Please select both a major and a year."
             return render(request, 'startup.html', {'error_message': error_message})
 
-    # Default view for GET request (show the form)
+    # Default view for get request (show the form)
     return render(request, 'startup.html')
 
 def instructor_history(request):
