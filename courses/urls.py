@@ -2,18 +2,13 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # Home page must be first to handle the root URL
+    #   path("admin/", admin.site.urls),
     path('', views.home, name='home'),
-
-    # Course detail page
     path('<str:subject>/<str:number>/', views.course_page, name='course_page'),
-
-    # Instructor history pages
-    path('instructor_history/', views.instructor_history, name='instructor_history'),
-    path('instructor-history/', views.instructor_history, name='instructor-history'),
-
-    # Historical patterns
-    path('historical_patterns/', views.historical_pattern_analysis, name='historical_patterns'),
+    path('instructor-history/', views.instructor_history, name='instructor_history'),
+    path('historical-patterns/', views.historical_pattern_analysis, name='historical_patterns'),
+    path('degree_requirements/', views.degree_requirements, name='degree_requirements'),
+    path('update_progress/', views.update_progress, name='update_progress'),
 
     # Favorites functionality
     path('add_to_favorites/<str:subject>/<str:course_number>/', views.add_to_favorites, name='add_to_favorites'),

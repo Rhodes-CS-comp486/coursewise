@@ -33,5 +33,6 @@ from courses import views
 
 urlpatterns = [
     #   path("admin/", admin.site.urls),
-    path('', include('courses.urls')),  # This will include all URLs from courses.urls
+    path('', views.startup, name='startup'),
+    path("courses/", include('courses.urls')),
 ]
