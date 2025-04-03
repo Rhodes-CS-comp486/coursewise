@@ -197,4 +197,45 @@
             <p class="text-lg text-gray-700 mt-6">No demand prediction available.</p>
         {% endif %}
     </div>
+    <script>
+        function addToFavorites(subject, courseNumber) {
+            fetch(`http://localhost:8000/courses/add_to_favorites/${subject}/${courseNumber}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Reload the page to show updated favorites
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error adding to favorites:', error);
+            });
+        }
+        
+        function removeFromFavorites(subject, courseNumber) {
+            fetch(`http://localhost:8000/courses/remove_from_favorites/${subject}/${courseNumber}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Reload the page to show updated favorites
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error removing from favorites:', error);
+            });
+        }
+        </script>
 {% endblock %}
