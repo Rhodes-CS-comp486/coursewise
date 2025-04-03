@@ -25,7 +25,16 @@ def home(request):
     else:
         courses = CourseInfo.objects.filter(f_credits__icontains=f_credit).values('subject', 'course_number').distinct().order_by('subject', 'course_number')
 
+    # Get favorites from session
+    favorites = request.session.get('favorites', [])
+    favorite_courses = []
 
+    # Get course details for each favorite
+    for fav in favorites:
+        subject, course_number = fav.split('-')
+        course = CourseCatalog.objects.filter(subject=subject, course_number=course_number).first()
+        if course:
+            favorite_courses.append(course)
 
     # Allow user input for Search
     course_search = request.GET.get('courseSearch', '').strip()
@@ -47,13 +56,46 @@ def home(request):
             # If the search term does not follow the expected format (e.g., "AFS 105")
             return HttpResponse("Invalid course format. Please use 'Subject Number' format.", status=400)
 
+
+
+
+
     return render(request, 'home.html', {
         'major': major,
         'year': year,
         'course_search': course_search,
         'instructor_search': instructor_search,
-        'courses': courses
+        'courses': courses,
+        'favorite_courses': favorite_courses,
     })
+
+
+def add_to_favorites(request, subject, course_number):
+    if 'favorites' not in request.session:
+        request.session['favorites'] = []
+
+    course_id = f"{subject}-{course_number}"
+    favorites = request.session['favorites']
+
+    if course_id not in favorites:
+        favorites.append(course_id)
+        request.session['favorites'] = favorites
+        request.session.modified = True
+
+    return JsonResponse({'status': 'success'})
+
+
+def remove_from_favorites(request, subject, course_number):
+    if 'favorites' in request.session:
+        course_id = f"{subject}-{course_number}"
+        favorites = request.session['favorites']
+
+        if course_id in favorites:
+            favorites.remove(course_id)
+            request.session['favorites'] = favorites
+            request.session.modified = True
+
+    return JsonResponse({'status': 'success'})
 def course_page(request, subject, number):
     offerings = CourseInfo.objects.filter(subject=subject.upper(), course_number=int(number))
     unique_offerings = offerings.values('semester', 'year', 'instructor', 'max_enrollment','students_enrolled').distinct()
@@ -65,6 +107,7 @@ def course_page(request, subject, number):
     demand_data = demand_prediction(request, subject, number)
 
     suggestion_courses = demand_data.get('suggestion_courses', [])
+
 
     # Added Instructor information
 
@@ -95,6 +138,26 @@ def course_page(request, subject, number):
                 'enrollment_vs_capacity': f"{round(avg_enrollment)}/{round(avg_capacity)}",
                 'enrollment_demand': demand_level,
             })
+        # Check if this course is in favorites
+        favorites = request.session.get('favorites', [])
+        is_favorite = f"{subject}-{number}" in favorites
+
+        return render(request, 'course_page.html', {
+            'offerings': unique_offerings,
+            'avg_class_size': avg_class_size,
+            'classification': demand_data["classification"],
+            'final_score': demand_data["final_score"],
+            'demand_level': demand_data["demand_level"],
+            'student_classification': demand_data["student_classification"],
+            'student_major': demand_data["student_major"],
+            'suggestion_courses': suggestion_courses,
+            'instructor_demand_data': instructor_demand_data,
+            'catalog_pull': catalog_pull,
+            # Add these three lines for favorites
+            'subject': subject,
+            'course_number': number,
+            'is_favorite': is_favorite
+        })
 
     print(list(unique_offerings))  # Check if NULLs are present
 

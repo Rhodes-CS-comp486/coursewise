@@ -40,4 +40,9 @@ urlpatterns = [
     path('historical-patterns/', views.historical_pattern_analysis, name='historical_patterns'),
     path('degree_requirements/', views.degree_requirements, name='degree_requirements'),
     path('update_progress/', views.update_progress, name='update_progress'),
+    path('add_to_favorites/<str:subject>/<str:course_number>/', views.add_to_favorites, name='add_to_favorites'),
+    path('remove_from_favorites/<str:subject>/<str:course_number>/', views.remove_from_favorites, name='remove_from_favorites'),
+# Make sure these paths are in your courses/urls.py file
+    path('add_to_favorites/<str:subject>/<str:course_number>/', views.add_to_favorites, name='add_to_favorites'),
+    path('remove_from_favorites/<str:subject>/<str:course_number>/', views.remove_from_favorites, name='remove_from_favorites'),
 ]
