@@ -115,7 +115,6 @@ def course_page(request, subject, number):
         'offerings': unique_offerings,
         'avg_class_size': avg_class_size,
         'classification': demand_data["classification"],
-        'final_score': demand_data["final_score"],
         'demand_level': demand_data["demand_level"],
         'student_classification': demand_data["student_classification"],
         'student_major': demand_data["student_major"],
@@ -349,7 +348,7 @@ def demand_prediction(request, subject, course_number):
         level_floor = (course_number_int // 100) * 100  # e.g., 300
         level_ceiling = level_floor + 100  # e.g., 400 (exclusive)
 
-        suggestion_courses = CourseInfoEXT.objects.filter(
+        suggestion_courses = CourseInfo.objects.filter(
             subject=subject,
             course_number__gte=level_floor,
             course_number__lt=level_ceiling
