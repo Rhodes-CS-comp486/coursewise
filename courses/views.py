@@ -155,7 +155,6 @@ def instructor_history(request):
 
     # Get all unique instructors
     instructors = CourseInfo.objects.values_list('instructor', flat=True).distinct()
-    print(f"Instructors: {instructors}")
 
     instructor_data = []
 
@@ -354,7 +353,7 @@ def demand_prediction(request, subject, course_number):
             course_number__lt=level_ceiling
         ).exclude(course_number=course_number_int).values('subject', 'course_number').distinct()
 
-    print("Suggestions:", suggestion_courses)
+    # print("Suggestions:", suggestion_courses)
 
     return {
         "classification": classification,
