@@ -78,6 +78,19 @@
         </div>
     {% endif %}
     
+    <!-- Suggestions Section -->
+    {% if course %}
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Course Prerequisites</h2>
+            <p class="text-gray-700">{{ course.prereqs }}</p>
+        </div>
+    {% else %}
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Course Prerequisites</h2>
+            <p class="text-gray-500">This course has no prerequisites.</p>
+        </div>
+    {% endif %}
+    
         <!-- Demand Prediction Section -->
         {% if classification %}
             <div class="bg-white shadow-md rounded-lg p-6 mt-6">

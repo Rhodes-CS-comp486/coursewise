@@ -56,6 +56,8 @@ def course_page(request, subject, number):
     offerings = CourseInfo.objects.filter(subject=subject.upper(), course_number=int(number))
     unique_offerings = offerings.values('semester', 'year', 'instructor', 'max_enrollment','students_enrolled').distinct()
 
+    catalog_pull = CourseCatalog.objects.filter(subject=subject.upper(), course_number=number).first()
+
     avg_class_size = int(offerings.aggregate(Avg("students_enrolled"))["students_enrolled__avg"]) or 0
 
     demand_data = demand_prediction(request, subject, number)
@@ -103,6 +105,7 @@ def course_page(request, subject, number):
         'student_major': demand_data["student_major"],
         'suggestion_courses': suggestion_courses,
         'instructor_demand_data': instructor_demand_data,
+        'course': catalog_pull
     })
 def startup(request):
     # Check if the form was submitted via POST
