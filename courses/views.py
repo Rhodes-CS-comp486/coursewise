@@ -5,14 +5,15 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.shortcuts import render, redirect
 from django.db.models import Sum, QuerySet, F, Avg, Value, Max, F, ExpressionWrapper, FloatField
-from courses.models import CourseInfo, CourseCatalog, CourseInfoEXT
+from courses.models import CourseInfo, CourseCatalog
 from django.db.models.functions import Greatest
 from django.shortcuts import render
 from django.db.models import Avg, Count
-from .models import CourseInfo, CourseInfoEXT
+from .models import CourseInfo
 from django.core.paginator import Paginator
 import datetime
 import json
+from django.http import Http404, HttpResponse, JsonResponse
 
 def home(request):
     f_credit = request.POST.get('f_credit', 'Not selected')
@@ -25,7 +26,15 @@ def home(request):
     else:
         courses = CourseInfo.objects.filter(f_credits__icontains=f_credit).values('subject', 'course_number').distinct().order_by('subject', 'course_number')
 
+    favorites = request.session.get('favorites', [])
+    favorite_courses = []
 
+    # Get course details for each favorite
+    for fav in favorites:
+        subject, course_number = fav.split('-')
+        course = CourseCatalog.objects.filter(subject=subject, course_number=course_number).first()
+        if course:
+            favorite_courses.append(course)
 
     # Allow user input for Search
     course_search = request.GET.get('courseSearch', '').strip()
@@ -40,8 +49,6 @@ def home(request):
             # Search format "Subject Number" (e.g., "AFS 105")
             subject = search_parts[0].upper()  # The first part is the subject
             number = search_parts[1]  # The second part is the course number
-
-            # Redirect to the course page
             return redirect('course_page', subject=subject, number=number)
         else:
             # If the search term does not follow the expected format (e.g., "AFS 105")
@@ -52,11 +59,14 @@ def home(request):
         'year': year,
         'course_search': course_search,
         'instructor_search': instructor_search,
-        'courses': courses
+        'courses': courses,
+        'favorite_courses': favorite_courses
     })
+
 def course_page(request, subject, number):
     offerings = CourseInfo.objects.filter(subject=subject.upper(), course_number=int(number))
-    unique_offerings = offerings.values('semester', 'year', 'instructor', 'max_enrollment','students_enrolled').distinct()
+    unique_offerings = offerings.values('semester', 'year', 'instructor', 'max_enrollment',
+                                        'students_enrolled').distinct()
 
     catalog_pull = CourseCatalog.objects.filter(subject=subject.upper(), course_number=number).first()
 
@@ -80,7 +90,7 @@ def course_page(request, subject, number):
             avg_data = history.aggregate(
                 avg_enrollment=Avg('students_enrolled'),
                 avg_capacity=Avg('max_enrollment')
-                )
+            )
             avg_enrollment = avg_data['avg_enrollment'] or 0
             avg_capacity = avg_data['avg_capacity'] or 0
 
@@ -96,7 +106,10 @@ def course_page(request, subject, number):
                 'enrollment_demand': demand_level,
             })
 
-    print(list(unique_offerings))  # Check if NULLs are present
+    # Check if this course is in favorites
+    favorites = request.session.get('favorites', [])
+    is_favorite = f"{subject}-{number}" in favorites
+
 
     return render(request, 'course_page.html', {
         'offerings': unique_offerings,
@@ -107,7 +120,10 @@ def course_page(request, subject, number):
         'student_major': demand_data["student_major"],
         'suggestion_courses': suggestion_courses,
         'instructor_demand_data': instructor_demand_data,
-        'course': catalog_pull
+        'course': catalog_pull,
+        'subject': subject,
+        'course_number': number,
+        'is_favorite': is_favorite
     })
 def startup(request):
     # Check if the form was submitted via POST
@@ -332,7 +348,7 @@ def demand_prediction(request, subject, course_number):
         level_floor = (course_number_int // 100) * 100  # e.g., 300
         level_ceiling = level_floor + 100  # e.g., 400 (exclusive)
 
-        suggestion_courses = CourseInfoEXT.objects.filter(
+        suggestion_courses = CourseInfo.objects.filter(
             subject=subject,
             course_number__gte=level_floor,
             course_number__lt=level_ceiling
@@ -425,18 +441,6 @@ def historical_pattern_analysis(request):
         'enrollment_data': enrollment_json,
         'high_demand_courses': high_demand_courses,
     })
-
-def foundation_filter(request):
-    # Check if the form was submitted via POST
-    if request.method == 'POST':
-        f_credit = request.POST.get('f_credit')
-
-        # Save the selections to the session (so they can be accessed later)
-        request.session['f_credit'] = f_credit
-
-    # Redirect the user to the home page
-    return redirect('home')  # Redirect to the home page after form submission
-
 
 def degree_requirements(request):
     # Majors and their Course Requirements
@@ -717,3 +721,32 @@ def update_progress(request):
 
     # Redirect back to the degree requirements page
     return HttpResponseRedirect(reverse('degree_requirements'))
+
+
+def add_to_favorites(request, subject, course_number):
+    if 'favorites' not in request.session:
+        request.session['favorites'] = []
+
+    course_id = f"{subject}-{course_number}"
+    favorites = request.session['favorites']
+
+    if course_id not in favorites:
+        favorites.append(course_id)
+        request.session['favorites'] = favorites
+        request.session.modified = True
+
+    return JsonResponse({'status': 'success'})
+
+
+def remove_from_favorites(request, subject, course_number):
+    if 'favorites' in request.session:
+        course_id = f"{subject}-{course_number}"
+        favorites = request.session['favorites']
+
+        if course_id in favorites:
+            favorites.remove(course_id)
+            request.session['favorites'] = favorites
+            request.session.modified = True
+
+    return JsonResponse({'status': 'success'})
+
