@@ -10,15 +10,9 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.DeleteModel(
-            name="Course",
-        ),
-        migrations.DeleteModel(
             name="CourseCatalog",
         ),
         migrations.DeleteModel(
             name="CourseInfo",
-        ),
-        migrations.DeleteModel(
-            name="CourseInfoEXT",
         ),
     ]
