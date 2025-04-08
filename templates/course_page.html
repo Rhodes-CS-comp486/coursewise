@@ -150,17 +150,26 @@
                                 <td class="px-4 py-3 border-b"><strong>Past Demand</strong></td>
                                 <td class="px-4 py-3 border-b">
                                     {% if impact_factors.past_demand > 0 %}
-                                        <span class="text-green-500">{{ impact_factors.past_demand }}</span> - Positively impacted your prediction.
+                                        <span class="text-green-500">{{ impact_factors.past_demand }}</span> - The previous demand for this course positively impacted your likelihood.
                                     {% elif impact_factors.past_demand < 0 %}
-                                        <span class="text-red-500">{{ impact_factors.past_demand }}</span> - Negatively impacted your prediction.
+                                        <span class="text-red-500">{{ impact_factors.past_demand }}</span> - The previous demand for this course negatively impacted your likelihood.
                                     {% else %}
-                                        <span class="text-gray-500">{{ impact_factors.past_demand }}</span> Did not affect your prediction.
+                                        <span class="text-gray-500">{{ impact_factors.past_demand }}</span> The previous demand didn't affected your likelihood.
                                     {% endif %}
                                 </td>
                             </tr>
+                            <!-- Prof Demand -->
                             <tr class="bg-white">
                                 <td class="px-4 py-3 border-b"><strong>Professor Demand</strong></td>
-                                <td class="px-4 py-3 border-b">{{ impact_factors.professor|default:"No impact data available" }}</td>
+                                <td class="px-4 py-3 border-b">
+                                    {% if impact_factors.professor > 0 %}
+                                        <span class="text-green-500">{{ impact_factors.professor }}</span> The professor demand for this course positively impacted your likelihood.
+                                    {% elif impact_factors.professor < 0 %}
+                                        <span class="text-red-500">{{ impact_factors.professor }}</span> The professor demand for this course negatively impacted your likelihood.
+                                    {% else %}
+                                        <span class="text-gray-500">{{ impact_factors.professor }}</span> The professor didn't affect your likelihood.
+                                    {% endif %}
+                                </td>
                             </tr>
                         </tbody>
                     </table>
