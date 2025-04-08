@@ -103,6 +103,7 @@ def course_page(request, subject, number):
         'student_major': demand_data["student_major"],
         'suggestion_courses': suggestion_courses,
         'instructor_demand_data': instructor_demand_data,
+        'impact_factors': demand_data["impact_factors"],
     })
 def startup(request):
     # Check if the form was submitted via POST
@@ -326,8 +327,6 @@ def demand_prediction(request, subject, course_number):
     elif demand_level == "Low":
         impact_factors['professor'] += 2
         initial_value += 2
-    print(f"Professor Impact: {impact_factors['professor']}")
-    print(f"Demand Level: {demand_level}")
 
     demand_list = [course_info_ext.demand for course_info_ext in course_info_ext]
     demand_counter = Counter(demand_list)
