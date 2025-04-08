@@ -103,6 +103,7 @@ def course_page(request, subject, number):
         'student_major': demand_data["student_major"],
         'suggestion_courses': suggestion_courses,
         'instructor_demand_data': instructor_demand_data,
+        'impact_factors': demand_data["impact_factors"],
     })
 def startup(request):
     # Check if the form was submitted via POST
@@ -293,10 +294,7 @@ def demand_prediction(request, subject, course_number):
         'student_year' : 0,
         'major': 0,
         'past_demand': 0
-        #'time_of_day' : 0,
-        #'days_of_week' : 0
     }
-
 
     for course in course_info:
 
@@ -322,9 +320,18 @@ def demand_prediction(request, subject, course_number):
         initial_value -= enrollment_demand // 5 # sub 1 for every 5 extra requests
         impact_factors['student_year'] += avg_enrollment_demand // 5
 
+    demand_level = _calculate_demand_level(course_info)
+    if demand_level == "High":
+        impact_factors['professor'] -= 2
+        initial_value -=2
+    elif demand_level == "Low":
+        impact_factors['professor'] += 2
+        initial_value += 2
+
     demand_list = [course_info_ext.demand for course_info_ext in course_info_ext]
     demand_counter = Counter(demand_list)
     most_common_demand, _ = demand_counter.most_common(1)[0]
+
 
     if most_common_demand == "High": #Bug FIX
         initial_value -= 5
