@@ -29,4 +29,4 @@ class CourseCatalog(models.Model):
     subject = models.CharField(max_length=255)
     course_number = models.CharField(max_length=255)
     course_title = models.CharField(max_length=255)
-    prereqs = models.CharField(max_length=255)
+    #prereqs = models.CharField(max_length=255)

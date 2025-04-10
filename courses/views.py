@@ -342,16 +342,15 @@ def demand_prediction(request, subject, course_number):
 
     course_number_int = int(course_number)
 
-    if classification == "Low":
         # Determine course level range
-        level_floor = (course_number_int // 100) * 100  # e.g., 300
-        level_ceiling = level_floor + 100  # e.g., 400 (exclusive)
+    level_floor = (course_number_int // 100) * 100  # e.g., 300
+    level_ceiling = level_floor + 100  # e.g., 400 (exclusive)
 
-        suggestion_courses = CourseInfo.objects.filter(
+    suggestion_courses = CourseInfo.objects.filter(
             subject=subject,
             course_number__gte=level_floor,
             course_number__lt=level_ceiling
-        ).exclude(course_number=course_number_int).values('subject', 'course_number').distinct()
+    ).exclude(course_number=course_number_int).values('subject', 'course_number').distinct()
 
     # print("Suggestions:", suggestion_courses)
 
