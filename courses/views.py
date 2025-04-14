@@ -9,6 +9,7 @@ from courses.models import CourseInfo, CourseCatalog
 from django.db.models.functions import Greatest
 from django.shortcuts import render
 from django.db.models import Avg, Count
+from itertools import chain
 from .models import CourseInfo
 from django.core.paginator import Paginator
 import datetime
@@ -686,6 +687,21 @@ def degree_requirements(request):
         if major:
             courses = major['courses']
 
+    subjects = set()
+    for course in courses:
+        parts = course.split()
+        if parts and parts[0].isalpha():
+            subjects.add(parts[0])
+
+    unique_courses = list(chain.from_iterable(
+        CourseInfo.objects.filter(subject=subj.upper())
+        .values('subject', 'course_number', 'course_title')
+        .distinct()
+        .order_by('course_number')
+        for subj in subjects
+    ))
+
+
     # Track completed courses in the session
     if 'completed_courses' not in request.session:
         request.session['completed_courses'] = []
@@ -705,6 +721,7 @@ def degree_requirements(request):
             'courses': courses,
             'completed_courses': completed_courses,
             'progress_percentage': progress_percentage,
+            'unique_courses': unique_courses
         })
 
 def update_progress(request):
