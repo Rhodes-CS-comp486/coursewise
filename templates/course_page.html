@@ -171,6 +171,19 @@ d{% extends "base.html" %}
                                     {% endif %}
                                 </td>
                             </tr>
+                        <!-- Major Match -->
+                            <tr class="bg-white">
+                                <td class="px-4 py-3 border-b"><strong>Major Relevance</strong></td>
+                                <td class="px-4 py-3 border-b">
+                                    {% if impact_factors.major < 0 %}
+                                        <span class="text-red-500"></span> - This course is outside your major, which decreased your likelihood of enrollment.
+                                    {% elif impact_factors.major > 0 %}
+                                        <span class="text-green-500"></span> - This course is in your major, which improved your likelihood of enrollment.
+                                    {% else %}
+                                        <span class="text-gray-500"></span> - Your major didn't influence the prediction for this course.
+                                    {% endif %}
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>

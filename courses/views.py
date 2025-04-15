@@ -332,6 +332,15 @@ def demand_prediction(request, subject, course_number):
     demand_counter = Counter(demand_list)
     most_common_demand, _ = demand_counter.most_common(1)[0]
 
+    # Check if course is in student's major department
+    if student_major and subject:
+        # Normalize and compare the first 3 characters
+        if student_major[:3].upper() == subject[:3].upper():
+            initial_value += 3  # student is likely to be interested
+            impact_factors['major'] += 3
+        else:
+            initial_value -= 3  # less likely to be of interest
+            impact_factors['major'] -= 3
 
     if most_common_demand == "High": #Bug FIX
         initial_value -= 5
