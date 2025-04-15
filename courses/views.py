@@ -705,12 +705,16 @@ def degree_requirements(request):
         for subj in subjects
     ))
 
-
     # Track completed courses in the session
     if 'completed_courses' not in request.session:
         request.session['completed_courses'] = []
 
     completed_courses = request.session['completed_courses']
+
+    filtered_suggestions = [
+        course for course in unique_courses
+        if f"{course['subject']} {course['course_number']}" not in completed_courses
+    ]
 
     # Calculate progress
     total_courses = len(courses)
@@ -729,7 +733,7 @@ def degree_requirements(request):
             'courses': courses,
             'completed_courses': completed_courses,
             'progress_percentage': progress_percentage,
-            'unique_courses': unique_courses
+            'unique_courses': filtered_suggestions,
         })
 
 
