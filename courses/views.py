@@ -732,18 +732,26 @@ def degree_requirements(request):
             'unique_courses': unique_courses
         })
 
+
 def update_progress(request):
     completed_courses = []
     for course_key in request.POST:
         if course_key.startswith('course_'):
-            course_name = course_key.split('_')[1]
+            course_name = course_key.split('_', 1)[1]  # Split only on first underscore
             completed_courses.append(course_name)
 
-        # Save the updated course progress to the session
-        request.session['completed_courses'] = completed_courses
+    # Save the updated course progress to the session
+    request.session['completed_courses'] = completed_courses
+    request.session.modified = True
 
-    # Redirect back to the degree requirements page
-    return HttpResponseRedirect(reverse('degree_requirements'))
+    # Get the major_id from the form
+    major_id = request.POST.get('major_id')
+
+    # Redirect back to the degree requirements page with the same major_id
+    if major_id:
+        return HttpResponseRedirect(f"{reverse('degree_requirements')}?major_id={major_id}")
+    else:
+        return HttpResponseRedirect(reverse('degree_requirements'))
 
 
 def add_to_favorites(request, subject, course_number):

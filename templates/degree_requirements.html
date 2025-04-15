@@ -32,21 +32,25 @@
             </div>
 
             <!-- Course Check Box -->
-            <form method="post" action="{% url 'update_progress' %}">
-                {% csrf_token %}
-                <ul>
-                    {% for course in courses %}
-                        <li>
-                            <input type="checkbox" name="course_{{ course }}"
-                                   {% if course in completed_courses %}checked{% endif %}>
-                            {{ course }}
-                        </li>
-                    {% endfor %}
-                </ul>
-                <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300">
-                    Save Progress
-                </button>
-            </form>
+<form method="post" action="{% url 'update_progress' %}">
+    {% csrf_token %}
+    <input type="hidden" name="major_id" value="{{ major.id }}">
+    <ul class="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+        {% for course in courses %}
+            <li class="flex items-center">
+                <input type="checkbox" id="course_{{ course }}" name="course_{{ course }}"
+                       {% if course in completed_courses %}checked{% endif %}
+                       class="mr-2 h-4 w-4">
+                <label for="course_{{ course }}" class="{% if course in completed_courses %}text-green-600 font-medium{% endif %}">
+                    {{ course }}
+                </label>
+            </li>
+        {% endfor %}
+    </ul>
+    <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300">
+        Save Progress
+    </button>
+</form>
             <!-- Personalized Recommendations Section -->
             {% if recommendations %}
                 <div class="mt-10 bg-blue-50 p-6 rounded-lg shadow">
