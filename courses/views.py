@@ -669,6 +669,10 @@ def degree_requirements(request):
             'name': 'Urban Studies',
             'courses': ['URBN 201', 'PLAW 206', 'Race and Ethnicity Elective', 'Methods Course', 'Community Engagement Elective', 'URBN 385', 'URBN 485', 'URBN Elective 1', 'URBN Elective 2', 'URBN Elective 3', 'URBN Elective 4']
         },
+
+
+
+
     ]
 
     # Get the search query
@@ -713,6 +717,10 @@ def degree_requirements(request):
     completed_count = len([course for course in courses if course in completed_courses])
     progress_percentage = (completed_count / total_courses) * 100 if total_courses > 0 else 0
 
+    # Generate personalized recommendations based on completed courses
+    recommendations = {}
+    if major and courses:
+        recommendations = generate_personalized_recommendations(courses, completed_courses, unique_courses)
 
     return render(request, 'degree_requirements.html', {
             'majors': majors,
@@ -765,3 +773,40 @@ def remove_from_favorites(request, subject, course_number):
 
     return JsonResponse({'status': 'success'})
 
+#helper function
+def generate_personalized_recommendations(courses, completed_courses, unique_courses):
+    # Filter out courses that have been completed
+    remaining_courses = [course for course in courses if course not in completed_courses]
+
+    # Find the next logical courses to take (courses with lowest course numbers that aren't completed)
+    next_courses = []
+    for course in remaining_courses:
+        parts = course.split()
+        if len(parts) >= 2 and parts[1].isdigit():
+            next_courses.append((course, int(parts[1])))
+        else:
+            next_courses.append((course, 9999))  # High number for courses without numeric part
+
+    next_courses.sort(key=lambda x: x[1])  # Sort by the course number
+    next_courses = [course[0] for course in next_courses][:3]  # Get top 3
+
+    # Find foundation courses that haven't been completed
+    foundation_courses = [course for course in remaining_courses if 'F' in course and course not in completed_courses][
+                         :3]
+
+    # Get actual course details from the database for these recommended courses
+    recommended_courses = []
+    for course_name in next_courses:
+        parts = course_name.split()
+        if len(parts) >= 2 and parts[0].isalpha():
+            subject = parts[0].upper()
+            for uc in unique_courses:
+                if uc['subject'] == subject and (parts[1] in str(uc['course_number'])):
+                    recommended_courses.append(uc)
+                    break
+
+    return {
+        'next_courses': next_courses,
+        'foundation_courses': foundation_courses,
+        'detailed_recommendations': recommended_courses
+    }
