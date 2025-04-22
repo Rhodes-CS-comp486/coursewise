@@ -20,7 +20,9 @@ def import_csv_data(csv_file_path):
                 subject = row['Subject'],
                 course_number = row['Course Number'],
                 course_title = row['Course Title'],
+                catalog_title = row['Catalog Title'],
                 f_credits = row['F-Credits'],
+                prereqs = row['Prerequisites'],
                 meeting_pattern = row['Meeting Pattern'],
                 meeting_time = row['Meeting Time'],
                 instructor = row['Instructor'],
@@ -41,6 +43,6 @@ def import_csv_data(csv_file_path):
 
 
 if __name__ == "__main__":
-    csv_file_path = '/Users/tt/Desktop/f_credits.csv'
+    csv_file_path = '/Users/tt/Desktop/complete.csv'
     import_csv_data(csv_file_path)
     print("CSV data has been loaded into the Django database.")

@@ -17,6 +17,7 @@ import json
 from django.http import Http404, HttpResponse, JsonResponse
 
 def home(request):
+    #completed_courses = request.session['completed_courses']
     f_credit = request.POST.get('f_credit', 'Not selected')
     major = request.session.get('major', 'Not selected')
     year = request.session.get('year', 'Not selected')
@@ -26,6 +27,12 @@ def home(request):
         courses = CourseInfo.objects.values('subject', 'course_number').distinct().order_by('subject', 'course_number')
     else:
         courses = CourseInfo.objects.filter(f_credits__icontains=f_credit).values('subject', 'course_number').distinct().order_by('subject', 'course_number')
+
+    #if completed_courses:
+        #print(completed_courses)
+        #k = CourseInfo.objects.filter(prereqs__icontains='').values('subject', 'course_number').distinct().order_by('subject', 'course_number')
+        #m = CourseInfo.objects.filter(prereqs__icontains=completed_courses[0]).values('subject', 'course_number').distinct().order_by('subject', 'course_number')
+        #courses = m
 
     favorites = request.session.get('favorites', [])
     favorite_courses = []
@@ -116,7 +123,6 @@ def course_page(request, subject, number):
         'offerings': unique_offerings,
         'avg_class_size': avg_class_size,
         'classification': demand_data["classification"],
-        'final_score': demand_data["final_score"],
         'demand_level': demand_data["demand_level"],
         'student_classification': demand_data["student_classification"],
         'student_major': demand_data["student_major"],
@@ -285,6 +291,7 @@ def demand_prediction(request, subject, course_number):
     capacity_filter = request.GET.get('capacity', None)  # Optional, defaults to None
     student_year = request.session.get('year', None)
     student_major = request.session.get('major', None)
+    course_info = CourseInfo.objects.filter(subject=subject, course_number=course_number)
 
     for instance in instances:
         all_requests = instance.senior_requests + instance.junior_requests + instance.sophomore_requests + instance.first_year_requests
@@ -292,12 +299,12 @@ def demand_prediction(request, subject, course_number):
         if instance.max_enrollment == 0:
             demand_offerings = demand_offerings - 1
             continue
-    # Build the initial query filtering by subject and course_number
-    query_filter = {
-        'subject': subject,
-        'course_number': course_number,
-        #'instructor' : instructor,
-    }
+        # Build the initial query filtering by subject and course_number
+        query_filter = {
+            'subject': subject,
+            'course_number': course_number,
+            #'instructor' : instructor,
+        }
 
         instance_demand = all_requests / instance.max_enrollment
         course_demand = course_demand + instance_demand
@@ -322,8 +329,6 @@ def demand_prediction(request, subject, course_number):
         instance_class_demand = class_enrolled / class_requests
         class_enrollment = class_enrollment + instance_class_demand
 
-    initial_value -= avg_f_credits
-    initial_value -= avg_major_minor
 
     if demand_offerings > 0:
         demand_num = course_demand / demand_offerings
@@ -371,35 +376,6 @@ def demand_prediction(request, subject, course_number):
         #else:
             #return HttpResponse("Invalid student year.", status=400)
 
-        if enrollment_demand < 0:
-            enrollment_demand = 0
-
-        total_enrollment_demand += enrollment_demand
-
-    avg_enrollment_demand = total_enrollment_demand / total_course
-
-    if avg_enrollment_demand >=5:
-        initial_value -= enrollment_demand // 5 # sub 1 for every 5 extra requests
-        impact_factors['student_year'] += avg_enrollment_demand // 5
-
-    demand_list = [course_info_ext.demand for course_info_ext in course_info_ext]
-    demand_counter = Counter(demand_list)
-    most_common_demand, _ = demand_counter.most_common(1)[0]
-
-    if most_common_demand == "High": #Bug FIX
-        initial_value -= 5
-        impact_factors['past_demand'] += 5
-    elif most_common_demand == "Low": #BUG FIX
-        initial_value += 5
-        impact_factors['past_demand'] -= 5
-
-    if initial_value >= 7:
-        classification = "High"
-    elif 4 <= initial_value <= 6:
-        classification = "Medium"
-    else:
-        classification = "Low"
-
     suggestion_courses = []  # Default empty
 
     course_number_int = int(course_number)
@@ -409,11 +385,11 @@ def demand_prediction(request, subject, course_number):
         level_floor = (course_number_int // 100) * 100  # e.g., 300
         level_ceiling = level_floor + 100  # e.g., 400 (exclusive)
 
-    suggestion_courses = CourseInfo.objects.filter(
-            subject=subject,
-            course_number__gte=level_floor,
-            course_number__lt=level_ceiling
-    ).exclude(course_number=course_number_int).values('subject', 'course_number').distinct()
+        suggestion_courses = CourseInfo.objects.filter(
+                subject=subject,
+                course_number__gte=level_floor,
+                course_number__lt=level_ceiling
+        ).exclude(course_number=course_number_int).values('subject', 'course_number').distinct()
 
     # print("Suggestions:", suggestion_courses)
 
