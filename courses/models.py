@@ -8,7 +8,9 @@ class CourseInfo(models.Model):
     subject = models.CharField(max_length=255)
     course_number = models.IntegerField()
     course_title = models.CharField(max_length=255)
+    catalog_title = models.CharField(max_length=255)
     f_credits = models.CharField(max_length=255)
+    prereqs = models.CharField(max_length=255)
     meeting_pattern = models.CharField(max_length=255)
     meeting_time = models.CharField(max_length=255)
     instructor = models.CharField(max_length=255)
@@ -25,32 +27,8 @@ class CourseInfo(models.Model):
     first_year_requests = models.IntegerField()
     first_years_enrolled = models.IntegerField()
 
-# Create your models here.
-class CourseInfoEXT(models.Model):
-    semester = models.CharField(max_length=255)
-    subject = models.CharField(max_length=255)
-    course_number = models.IntegerField()
-    instructor = models.CharField(max_length=255)
-    f_credits = models.IntegerField()
-    major_minor = models.IntegerField()
-    capacity = models.IntegerField()
-    total_enrollment = models.IntegerField()
-    demand = models.CharField(max_length=255)
-
-    class Meta:
-        db_table = 'courses_courseinfoext'
-
-    def __str__(self):
-        return f"{self.subject} {self.course_number}"
-
-class Course(models.Model):
-
-    def _str_(self):
-        return f"{self.subject} {self.course_number} - {self.course_title}"
-
 class CourseCatalog(models.Model):
     subject = models.CharField(max_length=255)
     course_number = models.CharField(max_length=255)
     course_title = models.CharField(max_length=255)
-
-
+    prereqs = models.CharField(max_length=255)

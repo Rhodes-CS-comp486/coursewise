@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{{% extends "base.html" %}
 
 {% block content %}
     <div class="flex container mx-auto px-6 py-8">
@@ -72,10 +72,14 @@
                 
                 <ul class="list-disc pl-6 space-y-3">
                     {% for course in courses %}
-                        <li class="text-lg text-gray-700">
-                            <a href="{% url 'course_page' course.subject course.course_number %}" class="text-blue-600 hover:text-blue-800 transition-all duration-300">
+                        <li class="text-lg text-gray-700 flex items-center">
+                            <a href="{% url 'course_page' course.subject course.course_number %}" class="text-blue-600 hover:text-blue-800 transition-all duration-300 mr-4">
                                 {{ course.subject }} {{ course.course_number }}
                             </a>
+                            <button onclick="addToFavorites('{{ course.subject }}', '{{ course.course_number }}')"
+                                    class="bg-green-500 text-white py-1 px-3 rounded-lg hover:bg-green-600 transition-all duration-300 text-sm">
+                                Add to Favorites
+                            </button>
                         </li>
                     {% empty %}
                         <li class="text-gray-500">No courses available.</li>
@@ -96,6 +100,28 @@
                 </p>
             </div>
             
+            <!-- Favorites Section -->
+            <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Your Favorite Courses</h2>
+                {% if favorite_courses %}
+                    <ul class="space-y-3">
+                        {% for course in favorite_courses %}
+                            <li class="flex items-center justify-between">
+                                <a href="{% url 'course_page' course.subject course.course_number %}" class="text-blue-600 hover:text-blue-800 transition-all duration-300">
+                                    {{ course.subject }} {{ course.course_number }}
+                                </a>
+                                <button onclick="removeFromFavorites('{{ course.subject }}', '{{ course.course_number }}')" 
+                                        class="bg-red-500 text-white py-1 px-3 rounded-lg hover:bg-red-600 transition-all duration-300 text-sm">
+                                    Remove
+                                </button>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-gray-500">No favorites added yet.</p>
+                {% endif %}
+            </div>
+            
             <!-- Buttons Section (Instructor History & Enrollment Pattern) -->
             <div class="flex space-x-4 mb-6">
                 <!-- Button to Instructor History -->
@@ -111,10 +137,55 @@
                         See Enrollment History
                     </button>
                 </a>
+                
+            <!-- Button to See Degree Requirements -->
+                <a href="{% url 'degree_requirements' %}">
+                    <button class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300 w-full sm:w-auto">
+                        See Degree Requirements
+                    </button>
+                </a>    
             </div>
         </div>
-    
-    
-        
     </div>
+    <script>
+        function addToFavorites(subject, courseNumber) {
+            fetch(`http://localhost:8000/courses/add_to_favorites/${subject}/${courseNumber}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Reload the page to show updated favorites
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error adding to favorites:', error);
+            });
+        }
+        
+        function removeFromFavorites(subject, courseNumber) {
+            fetch(`http://localhost:8000/courses/remove_from_favorites/${subject}/${courseNumber}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Reload the page to show updated favorites
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error removing from favorites:', error);
+            });
+        }
+        </script>
 {% endblock %}
