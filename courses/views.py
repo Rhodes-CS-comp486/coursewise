@@ -383,6 +383,7 @@ def demand_prediction(request, subject, course_number):
         "suggestion_courses": suggestion_courses,
     }
 
+
 def historical_pattern_analysis(request):
     # Get data for courses from the past 2 years
     courses = CourseInfo.objects.all().order_by('-year', '-semester')
