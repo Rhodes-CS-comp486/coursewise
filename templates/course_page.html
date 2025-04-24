@@ -4,18 +4,25 @@ d{% extends "base.html" %}
     <div class="container mx-auto px-4 py-6">
         <h1 class="text-3xl font-semibold text-gray-800 mb-6">Past Offerings</h1>
     <!-- Favorites Button -->
-    <div class="mb-6">
-        {% if is_favorite %}
-            <button onclick="removeFromFavorites('{{ subject }}', '{{ course_number }}')"
-                    class="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition-all duration-300">
-                Remove from Favorites
-            </button>
-        {% else %}
-            <button onclick="addToFavorites('{{ subject }}', '{{ course_number }}')"
-                    class="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-all duration-300">
-                Add to Favorites
-            </button>
-        {% endif %}
+    <div class="flex justify-between mb-6">
+        <div>
+            {% if is_favorite %}
+                <button onclick="removeFromFavorites('{{ subject }}', '{{ course_number }}')"
+                        class="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition-all duration-300">
+                    Remove from Favorites
+                </button>
+            {% else %}
+                <button onclick="addToFavorites('{{ subject }}', '{{ course_number }}')"
+                        class="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-all duration-300">
+                    Add to Favorites
+                </button>
+            {% endif %}
+        </div>
+
+        <!-- Back to Home Button -->
+        <a href="{% url 'home' %}" class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300">
+            Back to Home
+        </a>
     </div>
 
         <!-- Average Class Size Section -->
@@ -43,7 +50,6 @@ d{% extends "base.html" %}
                 {% endfor %}
             </ul>
         </div>
-
 
     <!-- Instructor Demand Data Section -->
         <div class="bg-white shadow-md rounded-lg p-6 mb-6">
@@ -74,14 +80,14 @@ d{% extends "base.html" %}
             </table>
         </div>
 
-     <!-- Suggestions Section -->
+        <!-- Suggestions Section -->
     {% if suggestion_courses %}
         <div class="bg-white shadow-md rounded-lg p-6 mb-6">
             <h2 class="text-xl font-semibold text-gray-800 mb-4">Suggested Similar Courses</h2>
             <ul class="list-disc pl-6 space-y-3">
                 {% for course in suggestion_courses %}
                     <li class="text-gray-700">
-                        <strong>{{ course.subject }} {{ course.course_number }}</li>
+                        <strong>{{ course.subject }} {{ course.course_number }}</strong></li>
                 {% endfor %}
             </ul>
         </div>
@@ -181,7 +187,7 @@ d{% extends "base.html" %}
                                     {% elif impact_factors.past_demand < 0 %}
                                         <span class="text-red-500">{{ impact_factors.past_demand }}</span> - The previous demand for this course negatively impacted your likelihood.
                                     {% else %}
-                                        <span class="text-gray-500">{{ impact_factors.past_demand }}</span> The previous demand didn't affected your likelihood.
+                                        <span class="text-gray-500">{{ impact_factors.past_demand }}</span> The previous demand did not affect your likelihood.
                                     {% endif %}
                                 </td>
                             </tr>
@@ -262,4 +268,3 @@ d{% extends "base.html" %}
         }
         </script>
 {% endblock %}
-

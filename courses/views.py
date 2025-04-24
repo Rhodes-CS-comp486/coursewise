@@ -5,6 +5,9 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.shortcuts import render, redirect
 from django.db.models import Sum, QuerySet, F, Avg, Value, Max, F, ExpressionWrapper, FloatField
+from django.utils.http import urlencode
+from django.utils.text import slugify
+
 from courses.models import CourseInfo, CourseCatalog
 from django.db.models.functions import Greatest
 from django.shortcuts import render
@@ -40,7 +43,7 @@ def home(request):
     # Get course details for each favorite
     for fav in favorites:
         subject, course_number = fav.split('-')
-        course = CourseCatalog.objects.filter(subject=subject, course_number=course_number).first()
+        course = CourseInfo.objects.filter(subject=subject, course_number=course_number).first()
         if course:
             favorite_courses.append(course)
 
@@ -62,12 +65,16 @@ def home(request):
             # If the search term does not follow the expected format (e.g., "AFS 105")
             return HttpResponse("Invalid course format. Please use 'Subject Number' format.", status=400)
 
+    paginator = Paginator(courses, 12)  # Show 12 courses per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     return render(request, 'home.html', {
         'major': major,
         'year': year,
         'course_search': course_search,
         'instructor_search': instructor_search,
-        'courses': courses,
+        'courses': page_obj,
         'favorite_courses': favorite_courses
     })
 
@@ -157,62 +164,38 @@ def startup(request):
     return render(request, 'startup.html')
 
 def instructor_history(request):
-    # Get current semester info (you may want to adjust this logic)
     current_date = datetime.date.today()
-    current_year = "2023"  # or get dynamically
+    current_year = "2023"  # Replace with dynamic logic if needed
     current_semester = "Spring"
 
     # Get all unique instructors
     instructors = CourseInfo.objects.values_list('instructor', flat=True).distinct()
-    print(f"Instructors: {instructors}")
-
     instructor_data = []
 
     for instructor in instructors:
-        # Get current courses for this instructor
         current_courses = CourseInfo.objects.filter(
             instructor=instructor,
             year=current_year,
             semester=current_semester
         ).values('subject', 'course_number', 'course_title')
 
-        # print(f"Current courses for {instructor}: {current_courses}") #debug
-
-        # Format current courses for display
         current_course_list = [
             f"{course['subject']} {course['course_number']}"
             for course in current_courses
         ]
 
-        # Get historical data for each current course
         historical_courses = {}
         for course in current_courses:
             course_code = f"{course['subject']} {course['course_number']}"
-
-            # Get all historical offerings of this course by this instructor
             history = CourseInfo.objects.filter(
                 instructor=instructor,
                 subject=course['subject'],
                 course_number=course['course_number']
             ).order_by('-year', '-semester')
 
-            # Calculate average class size
-            avg_size = history.aggregate(
-                avg_enrollment=Avg('students_enrolled')
-            )['avg_enrollment']
-
-            # print(f"Avg class size for {course_code}: {avg_size}")
-
-            # Calculate enrollment demand
+            avg_size = history.aggregate(avg_enrollment=Avg('students_enrolled'))['avg_enrollment']
             demand_level = _calculate_demand_level(history)
-
-            # print(f"Demand level for {course_code}: {demand_level}")
-
-            # Determine typical schedule
             schedule = _determine_schedule(history)
-            # print(f"Schedule for {course_code}: {schedule}")
-
-            # Format semester list
             semesters = [f"{h.semester} {h.year}" for h in history]
 
             historical_courses[course_code] = {
@@ -229,10 +212,43 @@ def instructor_history(request):
             'historical_courses': historical_courses
         })
 
-    #print(f"Instructor Data: {instructor_data}")
+    # Sort instructor data by name for consistency
+    instructor_data.sort(key=lambda x: x['name'].lower())
+
+    # Get instructor search param
+    instructor_search = request.GET.get('instructorSearch')
+    page_number = request.GET.get('page')
+
+    # If there's a search, find its page number
+    if instructor_search:
+        # Slugify search input to match ID format in HTML
+        target_slug = slugify(instructor_search.lower())
+
+        # Find matching instructor index
+        index = next(
+            (i for i, d in enumerate(instructor_data) if slugify(d['name'].lower()) == target_slug),
+            None
+        )
+
+        if index is not None:
+            if index is not None:
+                paginator = Paginator(instructor_data, 5)
+                target_page = (index // 5) + 1
+
+                if page_number != str(target_page):
+                    query_string = urlencode({
+                        'page': target_page,
+                        'instructorSearch': instructor_search
+                    })
+                    return HttpResponseRedirect(f"{request.path}?{query_string}")
+
+    # Default pagination behavior
+    paginator = Paginator(instructor_data, 5)
+    page_obj = paginator.get_page(page_number)
 
     return render(request, 'instructor_history.html', {
-        'instructor_data': instructor_data
+        'instructor_data': instructor_data,
+        'page_obj': page_obj,
     })
 
 

@@ -4,9 +4,15 @@
 <div class="container mx-auto p-4">
     <h1 class="text-2xl font-bold mb-6">Course Instructor History</h1>
 
-    {% for instructor in instructor_data %}
-        <!-- Add an id based on the instructor's last name for easy scrolling -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6" id="instructor-{{ instructor.name|lower }}">
+    <!-- Back to Home Button aligned right -->
+    <div class="flex justify-end mb-4">
+        <a href="{% url 'home' %}" class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300">
+            Back to Home
+        </a>
+    </div>
+
+    {% for instructor in page_obj %}
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6" id="instructor-{{ instructor.name|lower|slugify }}">
             <h2 class="text-xl font-semibold mb-4">{{ instructor.name }}</h2>
 
             <div class="mb-4">
@@ -59,33 +65,64 @@
                 </table>
             </div>
         </div>
+    {% empty %}
+        <p class="text-gray-500">No instructor data found.</p>
     {% endfor %}
+
+    <!-- Pagination controls -->
+    <div class="flex justify-center items-center space-x-4 mt-8">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.instructorSearch %}&instructorSearch={{ request.GET.instructorSearch|urlencode }}{% endif %}"
+               class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                rel="external">
+                    Previous
+            </a>
+        {% endif %}
+    
+        <span class="text-gray-600">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if request.GET.instructorSearch %}&instructorSearch={{ request.GET.instructorSearch|urlencode }}{% endif %}"
+               class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                rel="external">
+                    Next
+            </a>
+        {% endif %}
+    </div>
 </div>
 
 <!-- Scroll to instructor section using JavaScript -->
-<script>
-    window.onload = function() {
-        // Get the instructorSearch parameter from the URL
-        const params = new URLSearchParams(window.location.search);
-        const instructorSearch = params.get('instructorSearch');
-
-        // If the instructorSearch query is found in the URL
-        if (instructorSearch) {
-            // Construct the ID of the instructor's section (lowercased)
-            const instructorId = `instructor-${instructorSearch.toLowerCase()}`;
-            
-            // Replace spaces with hyphens using JavaScript
-            const finalInstructorId = instructorId.replace(/\s+/g, '-');
-            
-            // Get the instructor's section element
-            const target = document.getElementById(finalInstructorId);
-            
-            // If the instructor section exists, scroll to it smoothly
-            if (target) {
-                target.scrollIntoView({ behavior: 'smooth' });
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const params = new URLSearchParams(window.location.search);
+            const instructorSearch = params.get('instructorSearch');
+            const alreadyScrolled = sessionStorage.getItem('scrolledToInstructor');
+    
+            // Only scroll if instructorSearch exists AND we haven't scrolled yet
+            if (instructorSearch && !alreadyScrolled) {
+                const instructorId = `instructor-${instructorSearch.toLowerCase().replace(/\s+/g, '-')}`;
+                const target = document.getElementById(instructorId);
+    
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+    
+                    // Set scroll flag so we don't repeat
+                    sessionStorage.setItem('scrolledToInstructor', 'true');
+    
+                    // Clean the URL (no page reload!)
+                    params.delete('instructorSearch');
+                    const newUrl = `${window.location.pathname}?${params.toString()}`;
+                    window.history.replaceState({}, '', newUrl);
+                }
             }
-        }
-    };
-</script>
-
+    
+            // Reset the scroll flag when user paginates
+            const paginationLinks = document.querySelectorAll('a[href*="page="]');
+            paginationLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    sessionStorage.removeItem('scrolledToInstructor');
+                });
+            });
+        });
+    </script>
 {% endblock %}
