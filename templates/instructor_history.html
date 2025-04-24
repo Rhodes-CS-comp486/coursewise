@@ -72,7 +72,7 @@
     <!-- Pagination controls -->
     <div class="flex justify-center items-center space-x-4 mt-8">
         {% if page_obj.has_previous %}
-            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.instructorSearch %}&instructorSearch={{ request.GET.instructorSearch|urlencode }}{% endif %}"
+            <a href="?page={{ page_obj.previous_page_number }}{% if not request.GET.instructorSearch %}&instructorSearch={{ request.GET.instructorSearch|urlencode }}{% endif %}"
                class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
                 rel="external">
                     Previous
@@ -82,7 +82,7 @@
         <span class="text-gray-600">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
     
         {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}{% if request.GET.instructorSearch %}&instructorSearch={{ request.GET.instructorSearch|urlencode }}{% endif %}"
+            <a href="?page={{ page_obj.next_page_number }}{% if not request.GET.instructorSearch %}&instructorSearch={{ request.GET.instructorSearch|urlencode }}{% endif %}"
                class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
                 rel="external">
                     Next
@@ -90,39 +90,39 @@
         {% endif %}
     </div>
 </div>
-
-<!-- Scroll to instructor section using JavaScript -->
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const params = new URLSearchParams(window.location.search);
-            const instructorSearch = params.get('instructorSearch');
-            const alreadyScrolled = sessionStorage.getItem('scrolledToInstructor');
-    
-            // Only scroll if instructorSearch exists AND we haven't scrolled yet
-            if (instructorSearch && !alreadyScrolled) {
-                const instructorId = `instructor-${instructorSearch.toLowerCase().replace(/\s+/g, '-')}`;
-                const target = document.getElementById(instructorId);
-    
-                if (target) {
-                    target.scrollIntoView({ behavior: 'smooth' });
-    
-                    // Set scroll flag so we don't repeat
-                    sessionStorage.setItem('scrolledToInstructor', 'true');
-    
-                    // Clean the URL (no page reload!)
-                    params.delete('instructorSearch');
-                    const newUrl = `${window.location.pathname}?${params.toString()}`;
-                    window.history.replaceState({}, '', newUrl);
-                }
+    document.addEventListener('DOMContentLoaded', function () {
+        // Get the instructorSearch parameter from the URL
+        const params = new URLSearchParams(window.location.search);
+        const instructorSearch = params.get('instructorSearch');
+        const alreadyScrolled = sessionStorage.getItem('scrolledToInstructor');
+
+        // Only scroll if instructorSearch exists AND we haven't scrolled yet
+        if (instructorSearch && !alreadyScrolled) {
+            const instructorId = `instructor-${instructorSearch.toLowerCase().replace(/\s+/g, '-')}`;
+            const target = document.getElementById(instructorId);
+
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth' });
+
+                // Set scroll flag so we don't repeat scroll
+                sessionStorage.setItem('scrolledToInstructor', 'true');
+
+                // Clean the URL (no page reload!)
+                params.delete('instructorSearch');
+                const newUrl = `${window.location.pathname}?${params.toString()}`;
+                window.history.replaceState({}, '', newUrl);
             }
-    
-            // Reset the scroll flag when user paginates
-            const paginationLinks = document.querySelectorAll('a[href*="page="]');
-            paginationLinks.forEach(link => {
-                link.addEventListener('click', () => {
-                    sessionStorage.removeItem('scrolledToInstructor');
-                });
+        }
+
+        // Reset the scroll flag when user paginates (removing the instructorSearch from URL)
+        const paginationLinks = document.querySelectorAll('a[href*="page="]');
+        paginationLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                // Reset the scroll flag for next pagination
+                sessionStorage.removeItem('scrolledToInstructor');
             });
         });
+    });
     </script>
 {% endblock %}

@@ -89,9 +89,9 @@
                     {% if courses.has_previous %}
                         <a href="?page={{ courses.previous_page_number }}{% if course_search %}&courseSearch={{ course_search }}{% endif %}" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Previous</a>
                     {% endif %}
-                    
+
                     <span class="px-4 py-2 bg-gray-100 rounded text-gray-700">Page {{ courses.number }} of {{ courses.paginator.num_pages }}</span>
-                    
+
                     {% if courses.has_next %}
                         <a href="?page={{ courses.next_page_number }}{% if course_search %}&courseSearch={{ course_search }}{% endif %}" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Next</a>
                     {% endif %}
