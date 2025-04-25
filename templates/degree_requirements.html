@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
 {% block content %}
+    
+
     <!-- Search Bar Section -->
     <div class="container mx-auto px-6 py-4 mb-8">
         <form method="get" action="{% url 'degree_requirements' %}" class="flex items-center justify-center space-x-4">
@@ -13,12 +15,7 @@
 
     <div class="container mx-auto px-6 py-8">
         <h1 class="text-3xl font-semibold text-gray-800 mb-6">Degree Requirements</h1>
-<!-- Back Button -->
-<div class="container mx-auto px-6 py-2">
-    <a href="{% url 'home' %}" class="inline-block bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition-all duration-300">
-        <span class="mr-2">←</span> Back to Home
-    </a>
-</div>
+
         <!-- Display Major and Courses -->
         {% if major %}
             <h2 class="text-2xl font-semibold text-gray-800 mb-4">{{ major.name }} Courses</h2>
@@ -32,25 +29,26 @@
             </div>
 
             <!-- Course Check Box -->
-<form method="post" action="{% url 'update_progress' %}">
-    {% csrf_token %}
-    <input type="hidden" name="major_id" value="{{ major.id }}">
-    <ul class="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-        {% for course in courses %}
-            <li class="flex items-center">
-                <input type="checkbox" id="course_{{ course }}" name="course_{{ course }}"
-                       {% if course in completed_courses %}checked{% endif %}
-                       class="mr-2 h-4 w-4">
-                <label for="course_{{ course }}" class="{% if course in completed_courses %}text-green-600 font-medium{% endif %}">
-                    {{ course }}
-                </label>
-            </li>
-        {% endfor %}
-    </ul>
-    <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300">
-        Save Progress
-    </button>
-</form>
+            <form method="post" action="{% url 'update_progress' %}">
+                {% csrf_token %}
+                <input type="hidden" name="major_id" value="{{ major.id }}">
+                <ul class="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {% for course in courses %}
+                        <li class="flex items-center">
+                            <input type="checkbox" id="course_{{ course }}" name="course_{{ course }}"
+                                   {% if course in completed_courses %}checked{% endif %}
+                                   class="mr-2 h-4 w-4">
+                            <label for="course_{{ course }}" class="{% if course in completed_courses %}text-green-600 font-medium{% endif %}">
+                                {{ course }}
+                            </label>
+                        </li>
+                    {% endfor %}
+                </ul>
+                <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300">
+                    Save Progress
+                </button>
+            </form>
+
             <!-- Personalized Recommendations Section -->
             {% if recommendations %}
                 <div class="mt-10 bg-blue-50 p-6 rounded-lg shadow">
@@ -88,10 +86,13 @@
                             <h3 class="text-xl font-medium text-blue-700 mb-2">Course Details</h3>
                             <div class="grid grid-cols-1 gap-3">
                                 {% for course in recommendations.detailed_recommendations %}
-                                    <div class="bg-white p-4 rounded shadow-sm">
-                                        <p class="font-bold text-blue-700">{{ course.subject }} {{ course.course_number }}</p>
-                                        <p class="text-gray-700">{{ course.course_title }}</p>
-                                    </div>
+                                    <a href="{% url 'course_page' course.subject course.course_number %}" class="block">
+                                        <div class="bg-white p-4 rounded shadow-sm hover:bg-blue-50 transition-all cursor-pointer">
+                                            <p class="font-bold text-blue-700">{{ course.subject }} {{ course.course_number }}</p>
+                                            <p class="text-gray-700">{{ course.course_title }}</p>
+                                            <p class="text-blue-600 text-sm mt-1">View Course Details →</p>
+                                        </div>
+                                    </a>
                                 {% endfor %}
                             </div>
                         </div>
@@ -106,33 +107,38 @@
                 <h2 class="text-2xl font-semibold text-gray-800 mb-4">Suggested Courses</h2>
                 <div class="space-y-4">
                     {% for course in unique_courses %}
-                        <div class="flex items-center justify-between p-4 border rounded-lg shadow-sm hover:shadow-lg transition-shadow">
-                            <div>
-                                <p class="text-lg font-semibold text-blue-700">{{ course.subject }} - {{ course.course_number }}</p>
-                                <p class="text-sm text-gray-600">{{ course.course_title }}</p>
+                        <a href="{% url 'course_page' course.subject course.course_number %}" class="block">
+                            <div class="flex items-center justify-between p-4 border rounded-lg shadow-sm hover:shadow-lg hover:bg-blue-50 transition-all cursor-pointer">
+                                <div>
+                                    <p class="text-lg font-semibold text-blue-700">{{ course.subject }} - {{ course.course_number }}</p>
+                                    <p class="text-sm text-gray-600">{{ course.course_title }}</p>
+                                </div>
+                                <div class="text-blue-600">
+                                    <span>View Details →</span>
+                                </div>
                             </div>
-                        </div>
+                        </a>
                     {% endfor %}
                 </div>
             </div>
         {% endif %}
-    </div>
 
-    
-        
+        <!-- Display All Majors -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-            {% for major in majors %}
-                <div class="bg-white shadow-lg rounded-lg p-6">
-                    <div class="text-center">
-                        <h2 class="text-2xl font-semibold text-blue-600 mb-4">{{ major.name }}</h2>
-                        <a href="{% url 'degree_requirements' %}?major_id={{ major.id }}">
-                            <button class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300 w-full">
-                                View Requirements
-                            </button>
-                        </a>
+            {% if majors %}
+                {% for major in majors %}
+                    <div class="bg-white shadow-lg rounded-lg p-6">
+                        <div class="text-center">
+                            <h2 class="text-2xl font-semibold text-blue-600 mb-4">{{ major.name }}</h2>
+                            <a href="{% url 'degree_requirements' %}?major_id={{ major.id }}">
+                                <button class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300 w-full">
+                                    View Requirements
+                                </button>
+                            </a>
+                        </div>
                     </div>
-                </div>
-            {% endfor %}
+                {% endfor %}
+            {% endif %}
         </div>
     </div>
 {% endblock %}
