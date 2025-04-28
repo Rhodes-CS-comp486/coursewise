@@ -317,6 +317,7 @@ def demand_prediction(request, subject, course_number):
     }
 
     professor_demand = 0
+    prediction_num = 0
     professor_count = 0
 
     for instance in instances:
@@ -377,6 +378,23 @@ def demand_prediction(request, subject, course_number):
         instance_class_demand = class_enrolled / class_requests
         class_enrollment = class_enrollment + instance_class_demand
 
+    if student_major:
+        major_dept = student_major.strip().lower()[:3]
+        course_subject = subject.strip().lower()[:3]
+
+        if major_dept == course_subject:
+            impact_factors['major'] = 1  # Positive impact
+        else:
+            impact_factors['major'] = -1  # Negative impact
+
+        if major_dept == course_subject:
+            prediction_num += 0.05
+        else:
+            prediction_num -= 0.05
+    else:
+        impact_factors['major'] = 0  # No data
+
+
     if professor_count > 0:
         impact_factors['professor'] = professor_demand / professor_count
     else:
@@ -404,14 +422,7 @@ def demand_prediction(request, subject, course_number):
     else:
         demand_level = 'Low'
 
-    impact_factors = {
-        'professor' : 0,
-        'student_year' : 0,
-        'major': 0,
-        'past_demand': 0
-        #'time_of_day' : 0,
-        #'days_of_week' : 0
-    }
+
 
 
     for course in course_info:
