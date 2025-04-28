@@ -387,10 +387,6 @@ def demand_prediction(request, subject, course_number):
         else:
             impact_factors['major'] = -1  # Negative impact
 
-        if major_dept == course_subject:
-            prediction_num += 0.05
-        else:
-            prediction_num -= 0.05
     else:
         impact_factors['major'] = 0  # No data
 
@@ -406,12 +402,27 @@ def demand_prediction(request, subject, course_number):
     if prediction_offerings > 0:
         prediction_num = class_enrollment / prediction_offerings
 
-    if prediction_num > 0.7:
+    if demand_num > 0.8:
+        impact_factors['past_demand'] = -0.1  # High past demand makes it harder to get in
+    elif demand_num < 0.5:
+        impact_factors['past_demand'] = 0.1  # Low past demand makes it easier to get in
+    else:
+        impact_factors['past_demand'] = 0  # Neutral impact
+
+    prediction_num += (
+            impact_factors['major']
+            + impact_factors['professor']
+            + impact_factors['student_year']
+            + impact_factors['past_demand']
+    )
+
+    if prediction_num >= 0.75:
         classification = 'High'
-    elif 0.4 < prediction_num <= 0.7:
+    elif 0.5 <= prediction_num < 0.75:
         classification = 'Medium'
     else:
         classification = 'Low'
+
 
     if demand_num > 0.7:
         demand_level = 'High'

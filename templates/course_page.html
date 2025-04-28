@@ -183,9 +183,9 @@
                                 <td class="px-4 py-3 border-b"><strong>Past Demand</strong></td>
                                 <td class="px-4 py-3 border-b">
                                     {% if impact_factors.past_demand > 0 %}
-                                        <span class="text-green-500"></span> - The previous demand for this course positively impacted your likelihood.
+                                        <span class="text-green-500"></span> The previous demand for this course positively impacted your likelihood.
                                     {% elif impact_factors.past_demand < 0 %}
-                                        <span class="text-red-500"></span> - The previous demand for this course negatively impacted your likelihood.
+                                        <span class="text-red-500"></span> The previous demand for this course negatively impacted your likelihood.
                                     {% else %}
                                         <span class="text-gray-500"></span> The previous demand did not affect your likelihood.
                                     {% endif %}
