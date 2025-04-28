@@ -405,8 +405,6 @@ def demand_prediction(request, subject, course_number):
         demand_num = 0
     if prediction_offerings > 0:
         prediction_num = class_enrollment / prediction_offerings
-    else:
-        prediction_num = 0
 
     if prediction_num > 0.7:
         classification = 'High'
