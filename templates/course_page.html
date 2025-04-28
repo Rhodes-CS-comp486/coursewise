@@ -194,13 +194,13 @@
                             <!-- Prof Demand -->
                             <tr class="bg-white">
                                 <td class="px-4 py-3 border-b"><strong>Professor Demand</strong></td>
-                                <td class="px-4 py-3 border-b">
-                                    {% if impact_factors.professor > 0 %}
-                                        <span class="text-green-500"></span> The professor demand for this course positively impacted your likelihood.
-                                    {% elif impact_factors.professor < 0 %}
-                                        <span class="text-red-500"></span> The professor demand for this course negatively impacted your likelihood.
+                                <td class="px-4 py-3 border-b text-black">
+                                    {% if impact_factors.professor > 0.7 %}
+                                        High demand for this professor might reduce your chances of enrollment.
+                                    {% elif impact_factors.professor > 0.4 %}
+                                        Moderate demand for this professor could affect your chances.
                                     {% else %}
-                                        <span class="text-gray-500"></span> The professor didn't affect your likelihood.
+                                        This professor has lower demand, improving your chances.
                                     {% endif %}
                                 </td>
                             </tr>

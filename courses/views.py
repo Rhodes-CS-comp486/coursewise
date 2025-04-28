@@ -309,8 +309,40 @@ def demand_prediction(request, subject, course_number):
     student_major = request.session.get('major', None)
     course_info = CourseInfo.objects.filter(subject=subject, course_number=course_number)
 
+    impact_factors = {
+        'professor': 0,
+        'student_year': 0,
+        'major': 0,
+        'past_demand': 0,
+    }
+
+    professor_demand = 0
+    professor_count = 0
+
     for instance in instances:
         all_requests = instance.senior_requests + instance.junior_requests + instance.sophomore_requests + instance.first_year_requests
+        total_capacity = 0
+        total_enrollment = 0\
+
+        # Get all past courses taught by the same instructor
+        instructor_name = instance.instructor
+        instructor_courses = CourseInfo.objects.filter(instructor=instructor_name)
+
+
+        for course in instructor_courses:
+            if course.max_enrollment > 0:
+                total_capacity += course.max_enrollment
+                total_enrollment += course.students_enrolled
+
+        # Prevent divide-by-zero
+        if total_capacity > 0:
+            prof_demand_score = total_enrollment / total_capacity
+        else:
+            prof_demand_score = 0
+
+        # Accumulate across instances (averaging later)
+        professor_demand += prof_demand_score
+        professor_count += 1
 
         if instance.max_enrollment == 0:
             demand_offerings = demand_offerings - 1
@@ -345,7 +377,10 @@ def demand_prediction(request, subject, course_number):
         instance_class_demand = class_enrolled / class_requests
         class_enrollment = class_enrollment + instance_class_demand
 
-
+    if professor_count > 0:
+        impact_factors['professor'] = professor_demand / professor_count
+    else:
+        impact_factors['professor'] = 0
     if demand_offerings > 0:
         demand_num = course_demand / demand_offerings
     else:
