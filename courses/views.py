@@ -27,9 +27,9 @@ def home(request):
 
     # Get all courses
     if f_credit == 'Not selected':
-        courses = CourseInfo.objects.values('subject', 'course_number').distinct().order_by('subject', 'course_number')
+        courses = CourseInfo.objects.values('subject', 'course_number', 'catalog_title').distinct().order_by('subject', 'course_number')
     else:
-        courses = CourseInfo.objects.filter(f_credits__icontains=f_credit).values('subject', 'course_number').distinct().order_by('subject', 'course_number')
+        courses = CourseInfo.objects.filter(f_credits__icontains=f_credit).values('subject', 'course_number', 'catalog_title').distinct().order_by('subject', 'course_number')
 
     #if completed_courses:
         #print(completed_courses)
