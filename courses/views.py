@@ -38,6 +38,7 @@ def home(request):
         #courses = m
 
     favorites = request.session.get('favorites', [])
+    favorites.sort()
     favorite_courses = []
 
     # Get course details for each favorite
@@ -46,7 +47,6 @@ def home(request):
         course = CourseInfo.objects.filter(subject=subject, course_number=course_number).first()
         if course:
             favorite_courses.append(course)
-
     # Allow user input for Search
     course_search = request.GET.get('courseSearch', '').strip()
     instructor_search = request.GET.get('instructorSearch', '').strip()
