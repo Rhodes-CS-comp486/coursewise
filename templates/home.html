@@ -15,7 +15,7 @@
                     </div>
 
                     <div class="flex items-end">
-                        <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300">
+                        <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300">
                             Search
                         </button>
                     </div>
@@ -29,7 +29,7 @@
                     </div>
 
                     <div class="flex items-end">
-                        <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300">
+                        <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300">
                             Search
                         </button>
                     </div>
@@ -65,26 +65,24 @@
 
         <div class="container justify-center px-6 basis-2/4">
             <!-- Available Courses Section -->
-            <div class="bg-white shadow-md rounded-lg p-6">
-                <h1 class="text-3xl font-semibold text-gray-800 mb-6">Available Courses</h1>
-
-                <ul class="list-disc pl-6 space-y-3">
-                    {% for course in courses %}
-                        <li class="text-lg text-gray-700 flex items-center">
-                            <a href="{% url 'course_page' course.subject course.course_number %}" class="text-blue-600 hover:text-blue-800 transition-all duration-300 mr-4">
-                                {{ course.subject }} {{ course.course_number }}
-                            </a>
-                            <button onclick="addToFavorites('{{ course.subject }}', '{{ course.course_number }}')"
-                                    class="bg-green-500 text-white py-1 px-3 rounded-lg hover:bg-green-600 transition-all duration-300 text-sm">
-                                Add to Favorites
-                            </button>
-                        </li>
-                    {% empty %}
-                        <li class="text-gray-500">No courses available.</li>
-                    {% endfor %}
-                </ul>
-
-                <!-- Pagination Controls -->
+            {% for course in courses %}
+                {% if course.catalog_title != '' %}
+                    <div class="course-container">
+                        <div onclick="location.href='{% url 'course_page' course.subject course.course_number %}';" style="cursor: pointer;">
+                            <h1 class="text-2xl font-semibold text-gray-800 mb-6">
+                                {{ course.subject }} {{ course.course_number }}: {{ course.catalog_title }}
+                            </h1>
+                        </div>
+                         <button onclick="addToFavorites('{{ course.subject }}', '{{ course.course_number }}')"
+                                    class="bg-green-500 text-white py-1 px-3 rounded-lg hover:bg-green-600 transition-all duration-300 text-sm z-3">
+                                    Add to Favorites
+                         </button>
+                    </div>
+                {% endif %}
+            {% empty %}
+                <li class="text-gray-500">No courses available.</li>
+            {% endfor %}
+            <!-- Pagination Controls -->
                 <div class="mt-6 flex justify-center space-x-2">
                     {% if courses.has_previous %}
                         <a href="?page={{ courses.previous_page_number }}{% if course_search %}&courseSearch={{ course_search }}{% endif %}" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Previous</a>
@@ -96,7 +94,7 @@
                         <a href="?page={{ courses.next_page_number }}{% if course_search %}&courseSearch={{ course_search }}{% endif %}" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Next</a>
                     {% endif %}
                 </div>
-            </div>
+            
         </div>
 
         <div class="container justify-end basis-1/4">
@@ -131,30 +129,6 @@
                 {% else %}
                     <p class="text-gray-500">No favorites added yet.</p>
                 {% endif %}
-            </div>
-
-            <!-- Buttons Section (Instructor History & Enrollment Pattern) -->
-            <div class="flex space-x-4 mb-6">
-                <!-- Button to Instructor History -->
-                <a href="{% url 'instructor_history' %}">
-                    <button class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300 w-full sm:w-auto">
-                        See Instructor History
-                    </button>
-                </a>
-
-                <!-- Button to Historical Enrollment Analysis -->
-                <a href="{% url 'historical_patterns' %}">
-                    <button class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300 w-full sm:w-auto">
-                        See Enrollment History
-                    </button>
-                </a>
-
-                <!-- Button to See Degree Requirements -->
-                <a href="{% url 'degree_requirements' %}">
-                    <button class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300 w-full sm:w-auto">
-                        See Degree Requirements
-                    </button>
-                </a>
             </div>
         </div>
     </div>
