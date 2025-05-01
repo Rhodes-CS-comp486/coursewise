@@ -59,7 +59,12 @@ def home(request):
             # Search format "Subject Number" (e.g., "AFS 105")
             subject = search_parts[0].upper()  # The first part is the subject
             number = search_parts[1]  # The second part is the course number
-            return redirect('course_page', subject=subject, number=number)
+            course_found = CourseInfo.objects.filter(subject__icontains=search_parts[0].upper(), course_number__icontains=search_parts[1]).values(
+                'subject', 'course_number','catalog_title').distinct().order_by('subject', 'course_number')
+            if course_found.exists():
+                return redirect('course_page', subject=subject, number=number)
+            else:
+                return redirect('home')
         else:
             # If the search term does not follow the expected format (e.g., "AFS 105")
             return HttpResponse("Invalid course format. Please use 'Subject Number' format.", status=400)
