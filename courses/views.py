@@ -432,8 +432,6 @@ def demand_prediction(request, subject, course_number):
         demand_level = 'Low'
 
 
-
-
     for course in course_info:
 
         if student_year == "Freshman":
