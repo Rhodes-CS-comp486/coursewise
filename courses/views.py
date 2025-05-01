@@ -20,22 +20,21 @@ import json
 from django.http import Http404, HttpResponse, JsonResponse
 
 def home(request):
-    #completed_courses = request.session['completed_courses']
+    course_subject = request.POST.get('course_subject', 'Not selected')
     f_credit = request.POST.get('f_credit', 'Not selected')
     major = request.session.get('major', 'Not selected')
     year = request.session.get('year', 'Not selected')
 
     # Get all courses
-    if f_credit == 'Not selected':
-        courses = CourseInfo.objects.values('subject', 'course_number', 'catalog_title').distinct().order_by('subject', 'course_number')
-    else:
+    if course_subject == 'Not selected' and f_credit == 'Not selected':
+        courses = CourseInfo.objects.values('subject', 'course_number', 'catalog_title').distinct().order_by('subject',
+                                                                                       'course_number')
+    elif course_subject != 'Not selected' and f_credit == 'Not selected':
         courses = CourseInfo.objects.filter(f_credits__icontains=f_credit).values('subject', 'course_number', 'catalog_title').distinct().order_by('subject', 'course_number')
-
-    #if completed_courses:
-        #print(completed_courses)
-        #k = CourseInfo.objects.filter(prereqs__icontains='').values('subject', 'course_number').distinct().order_by('subject', 'course_number')
-        #m = CourseInfo.objects.filter(prereqs__icontains=completed_courses[0]).values('subject', 'course_number').distinct().order_by('subject', 'course_number')
-        #courses = m
+    else:
+        courses = CourseInfo.objects.filter(subject__icontains=course_subject, f_credits__icontains=f_credit).values('subject', 'course_number',
+                                                                                  'catalog_title').distinct().order_by(
+            'subject', 'course_number')
 
     favorites = request.session.get('favorites', [])
     favorites.sort()
@@ -125,6 +124,8 @@ def course_page(request, subject, number):
     favorites = request.session.get('favorites', [])
     is_favorite = f"{subject}-{number}" in favorites
 
+    course_title = CourseInfo.objects.filter(subject=subject.upper(), course_number=int(number)).values('catalog_title').first()
+
 
     return render(request, 'course_page.html', {
         'offerings': unique_offerings,
@@ -139,6 +140,7 @@ def course_page(request, subject, number):
         'course': catalog_pull,
         'subject': subject,
         'course_number': number,
+        'title': course_title['catalog_title'],
         'is_favorite': is_favorite
     })
 def startup(request):
@@ -173,16 +175,25 @@ def instructor_history(request):
     instructor_data = []
 
     for instructor in instructors:
-        current_courses = CourseInfo.objects.filter(
-            instructor=instructor,
-            year=current_year,
-            semester=current_semester
-        ).values('subject', 'course_number', 'course_title')
+        if instructor == '':
+            continue
 
-        current_course_list = [
-            f"{course['subject']} {course['course_number']}"
-            for course in current_courses
-        ]
+        current_courses = CourseInfo.objects.filter(instructor=instructor).values('subject', 'course_number', 'course_title', 'catalog_title').distinct().order_by('subject', 'course_number')
+
+
+
+        if not current_courses:
+            continue
+
+        seen_courses = []
+        current_course_list = []
+        for c in current_courses:
+            concourse = c['subject'] + str(c['course_number'])
+            if concourse in seen_courses:
+                continue
+            seen_courses.append(concourse)
+            course_string = c['subject'] + " " + str(c['course_number'])
+            current_course_list.append(course_string)
 
         historical_courses = {}
         for course in current_courses:
@@ -196,10 +207,18 @@ def instructor_history(request):
             avg_size = history.aggregate(avg_enrollment=Avg('students_enrolled'))['avg_enrollment']
             demand_level = _calculate_demand_level(history)
             schedule = _determine_schedule(history)
-            semesters = [f"{h.semester} {h.year}" for h in history]
+            seen = []
+            semesters = []
+            for h in history:
+                sem = h.semester + h.year
+                if sem in seen:
+                    continue
+                seen.append(sem)
+                sem_string = h.semester + " " + h.year
+                semesters.append(sem_string)
 
             historical_courses[course_code] = {
-                'course_title': course['course_title'],
+                'course_title': course['catalog_title'],
                 'semesters': semesters,
                 'avg_class_size': round(avg_size) if avg_size else 0,
                 'enrollment_demand': demand_level,
@@ -286,9 +305,9 @@ def _determine_schedule(course_history):
     if 'Fall' in semesters and 'Spring' in semesters:
         return "Fall and Spring"
     elif 'Fall' in semesters:
-        return "Fall only"
+        return "Fall"
     elif 'Spring' in semesters:
-        return "Spring only"
+        return "Spring"
     else:
         return "Varies"
 

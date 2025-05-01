@@ -2,7 +2,7 @@
 
 {% block content %}
     <div class="container mx-auto px-4 py-6">
-        <h1 class="text-3xl font-semibold text-gray-800 mb-6">Past Offerings</h1>
+        <h1 class="text-3xl font-semibold text-gray-800 mb-6">{{ subject }} {{ course_number }}: {{ title }}</h1>
         <!-- Favorites Button -->
         <div class="flex justify-between mb-6">
             <div>
@@ -55,7 +55,7 @@
                 <thead>
                     <tr class="bg-gray-200">
                         <th class="border border-gray-300 px-4 py-2 text-left">Instructor</th>
-                        <th class="border border-gray-300 px-4 py-2 text-left">Avg. Enrollment vs Capacity</th>
+                        <th class="border border-gray-300 px-4 py-2 text-left">Average Enrollment vs. Capacity</th>
                         <th class="border border-gray-300 px-4 py-2 text-left">Enrollment Demand for Professor</th>
                     </tr>
                 </thead>

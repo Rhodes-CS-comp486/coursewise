@@ -11,7 +11,7 @@
             <h2 class="text-xl font-semibold mb-4">{{ instructor.name }}</h2>
 
             <div class="mb-4">
-                <h3 class="text-lg font-medium mb-2">Current Courses:</h3>
+                <h3 class="text-lg font-medium mb-2">Past Course Offerings:</h3>
                 <div class="flex flex-wrap gap-2">
                     {% for course in instructor.current_courses %}
                         
@@ -31,7 +31,7 @@
                         <tr class="bg-gray-50">
                             <th class="px-4 py-2 text-left border">Course</th>
                             <th class="px-4 py-2 text-left border">Previous Semesters</th>
-                            <th class="px-4 py-2 text-left border">Avg Class Size</th>
+                            <th class="px-4 py-2 text-left border">Average Class Size</th>
                             <th class="px-4 py-2 text-left border">Enrollment Demand</th>
                             <th class="px-4 py-2 text-left border">Typical Schedule</th>
                         </tr>

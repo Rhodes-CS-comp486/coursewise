@@ -41,6 +41,59 @@
                 <form method="POST" action="{% url 'home' %}">
                     {% csrf_token %}
                     <div class="mb-4">
+                        <label for="course_subject" class="block text-lg font-medium text-gray-700">Subject</label>
+                        <select id="course_subject" name="course_subject" class="mt-2 py-6 border border-gray-300 rounded w-full">
+                            <option value="">Select</option>
+                            <option value="AERO">Aerospace Studies</option>
+                            <option value="AFS">Africana Studies</option>
+                            <option value="AMS">Ancient Mediterranean Studies</option>
+                            <option value="ANSO">Anthropology/Sociology</option>
+                            <option value="ARCE">Archaeology</option>
+                            <option value="ART">Art & Art History</option>
+                            <option value="ASTD">Asian Studies</option>
+                            <option value="BIOL">Biology</option>
+                            <option value="BMB">Biochemistry and Molecular Bio</option>
+                            <option value="BUS">Business</option>
+                            <option value="CHEM">Chemistry</option>
+                            <option value="CHIN">Chinese</option>
+                            <option value="COMP">Computer Science</option>
+                            <option value="ECON">Economics</option>
+                            <option value="EDUC">Educational Studies</option>
+                            <option value="ENGL">English</option>
+                            <option value="ENVS">Environmental Study & Science</option>
+                            <option value="FREN">French</option>
+                            <option value="FYWS">First-Year Writing Seminar</option>
+                            <option value="GREK">Greek</option>
+                            <option value="GRST">German</option>
+                            <option value="GSST">Gender and Sexuality Studies</option>
+                            <option value="HEBR">Hebrew</option>
+                            <option value="HIST">History</option>
+                            <option value="HLEQ">Health Equity</option>
+                            <option value="HUM">Humanities</option>
+                            <option value="INTD">Interdepartmental</option>
+                            <option value="INTS">International Studies</option>
+                            <option value="JIME">Jewish, Islamic & Middle Eastern Studies</option>
+                            <option value="LALS">Latin American Studies</option>
+                            <option value="LANG">Modern Languages and Literatures</option>
+                            <option value="LATN">Latin</option>
+                            <option value="MATH">Mathematics</option>
+                            <option value="MILS">Military Science</option>
+                            <option value="MST">Media Studies</option>
+                            <option value="MUSC">Music</option>
+                            <option value="NAVY">Naval Science</option>
+                            <option value="NEUR">Neuroscience</option>
+                            <option value="PHIL">Philosophy</option>
+                            <option value="PHYS">Physics</option>
+                            <option value="PLAW">Politics and Law</option>
+                            <option value="PPE">Philosophy, Politics, and Economics</option>
+                            <option value="PSYC">Psychology</option>
+                            <option value="RELS">Religious Studies</option>
+                            <option value="RUSS">Russian</option>
+                            <option value="SPAN">Spanish</option>
+                            <option value="URBN">Urban Studies</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
                         <label for="f_credit" class="block text-lg font-medium text-gray-700">Foundation Credit</label>
                         <select id="f_credit" name="f_credit" class="mt-2 py-6 border border-gray-300 rounded w-full">
                             <option value="">Select</option>
@@ -80,7 +133,7 @@
                     </div>
                 {% endif %}
             {% empty %}
-                <li class="text-gray-500">No courses available.</li>
+                <p class="text-gray-500 text-center">No courses available.</p>
             {% endfor %}
             <!-- Pagination Controls -->
                 <div class="mt-6 flex justify-center space-x-2">
