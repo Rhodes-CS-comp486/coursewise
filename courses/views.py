@@ -69,6 +69,7 @@ def home(request):
             # If the search term does not follow the expected format (e.g., "AFS 105")
             return HttpResponse("Invalid course format. Please use 'Subject Number' format.", status=400)
 
+
     paginator = Paginator(courses, 12)  # Show 12 courses per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
